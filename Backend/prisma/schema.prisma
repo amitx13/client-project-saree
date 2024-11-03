@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String
+  mobile             String?               @unique
+  password           String
+  networkSize        Int                  @default(0)
+  membershipStatus   Boolean              @default(false)
+  levelIncome        Int                  @default(0)
+  referrerId         String?
+  createdAt          DateTime             @default(now())
+  orderStatus        Boolean              @default(false)
+  role               Role                 @default(USER)
+  walletBalance      Float                @default(0)
+  address            Address[]
+  BankDetails        BankDetails[]
+  orders             Order[]
+  resetTokens        PasswordResetToken[]
+  referrer           User?                @relation("UserReferrals", fields: [referrerId], references: [id])
+  referrals          User[]               @relation("UserReferrals")
+  userRewards        UserReward[]
+  withdrawalRequests WithdrawalRequest[]
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  houseNo   String
+  city      String
+  state     String
+  pinCode   String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Saree {
+  id        String   @id @default(cuid())
+  name      String
+  price     Int      @default(750)
+  image     String
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  userId    String
+  sareeId   String
+  dispatch  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  saree     Saree    @relation(fields: [sareeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BankDetails {
+  id        String   @id @default(cuid())
+  accountNo String
+  ifscCode  String
+  BankName  String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(cuid())
+  userId    String
+  amount    Float
+  status    WithdrawalStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivationCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  isUsed    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+}
+
+model Reward {
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  level       Int          @unique
+  amount      Float        @default(0)
+  userRewards UserReward[]
+}
+
+model UserReward {
+  id          String    @id @default(cuid())
+  userId      String
+  rewardId    String
+  isClaimable Boolean   @default(false)
+  isClaimed   Boolean   @default(false)
+  claimDate   DateTime?
+  reward      Reward    @relation(fields: [rewardId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum WithdrawalStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}

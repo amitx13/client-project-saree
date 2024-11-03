@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "mobile" DROP DEFAULT,
+ALTER COLUMN "mobile" SET DATA TYPE TEXT;
