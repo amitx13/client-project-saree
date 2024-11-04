@@ -1,5 +1,5 @@
 import express from 'express';
-import { createOrder } from '../controllers/userController/userOrderController';
+import { createOrder, getUserOrderStatus } from '../controllers/userController/userOrderController';
 import { createWithdrawalRequest } from '../controllers/userController/userWithdrawController';
 import { activateAccountWithCode } from '../controllers/userController/userActivateAccountController';
 import { getUserData, getUserRewardData, getUserTeamData, getUserWalletData } from '../controllers/userController/getUserData';
@@ -11,6 +11,7 @@ router.get('/getdata/:id',getUserData);
 router.get('/myTeamData/:id',getUserTeamData);
 router.get('/getWalletData/:id',getUserWalletData);
 router.get('/getUserRewardData/:id',getUserRewardData);
+router.get('/userOrderStatus/:id',getUserOrderStatus);
 router.post('/order',createOrder);
 router.post('/withdraw',createWithdrawalRequest);
 router.post('/claimReward',claimReward);

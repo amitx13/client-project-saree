@@ -9,6 +9,7 @@ import { Phone, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useUserState } from "@/recoil/user";
 import { useNavigate } from "react-router-dom";
 import { useUserTeamData } from "@/hooks/useUserTeamData";
+import { Input } from "../ui/input";
 
 interface UserDataProps {
   sponsored: {
@@ -76,54 +77,51 @@ const MyTeam = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">My Team</h1>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Referral Card */}
-        {!userData?.sponsored ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>No Sponsor</CardTitle>
-            </CardHeader>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>{userData.sponsored.name}</CardTitle>
-              <CardDescription>Sponsor</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 mb-4">
-                <input
+    <h1 className="text-3xl font-bold mb-6">My Team</h1>
+  
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Referral Card */}
+      <Card className="flex flex-col h-full">
+        <CardHeader>
+          <CardTitle>{userData?.sponsored ? userData.sponsored.name : "No Sponsor"}</CardTitle>
+          {userData?.sponsored && <CardDescription>Sponsor</CardDescription>}
+        </CardHeader>
+        {userData?.sponsored && (
+          <CardContent className="flex-grow">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Input
                   value={userData.sponsored.email}
                   readOnly
-                  className="flex-grow p-2 border rounded text-black"
+                  className="flex-grow text-black"
                 />
                 <Button variant="outline" size="icon" onClick={() => copyReferralCode(userData.sponsored.email.toString())}>
                   <CopyIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex items-center space-x-2 mb-4">
-                <input
+              <div className="flex items-center space-x-2">
+                <Input
                   value={userData.sponsored.phone}
                   readOnly
-                  className="flex-grow p-2 border rounded text-black"
+                  className="flex-grow text-black"
                 />
                 <Button variant="outline" size="icon" onClick={() => copyReferralCode(userData.sponsored.phone.toString())}>
                   <CopyIcon className="h-4 w-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
         )}
-
-        {/* Team Size and Rewards Card */}
-        {userData && <Card className="md:col-span-2 lg:col-span-3">
+      </Card>
+  
+      {/* Team Size and Rewards Card */}
+      {userData && (
+        <Card className="flex flex-col h-full md:col-span-2 lg:col-span-1">
           <CardHeader>
             <CardTitle>My Team Size</CardTitle>
             <CardDescription>Grow your team through referrals to unlock even greater rewards!</CardDescription>
           </CardHeader>
-          <CardContent className="pt-2">
+          <CardContent className="flex-grow">
             {userData.networkSize ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -132,24 +130,28 @@ const MyTeam = () => {
                 </div>
                 {renderUserIcons(userData?.referrals.length || 0, 5)}
                 <div className="flex justify-between items-center">
-                  <span className="text-sm ">All Team</span>
+                  <span className="text-sm">All Team</span>
                   <span className="font-semibold">{userData.networkSize}</span>
                 </div>
                 {renderUserIcons(userData?.networkSize || 0, 8)}
               </div>
-            ) :
-              (
-                <div>
-                  <p className="text-base font-bold">No Team Data Found</p>
-                </div>
-              )}
+            ) : (
+              <div>
+                <p className="text-base font-bold">No Team Data Found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-        }
-
-        {userData && userData.referrals.length > 0 && <FirstLineTeamCard teamMembers={userData.referrals} />}
-      </div>
+      )}
+  
+      {/* First Line Team Card */}
+      {userData && userData.referrals.length > 0 && (
+        <Card className="flex flex-col h-full md:col-span-2 lg:col-span-1">
+          <FirstLineTeamCard teamMembers={userData.referrals} />
+        </Card>
+      )}
     </div>
+  </div>
   );
 };
 
@@ -183,8 +185,8 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
       </CardHeader>
       <CardContent>
         <ScrollArea className="max-h-fit w-full rounded-md border p-4 ">
-          {getCurrentMembers().map((member) => (
-            <div className="flex items-center space-x-4 mb-4">
+          {getCurrentMembers().map((member,index) => (
+            <div key={index} className="flex items-center space-x-4 mb-4">
               <Avatar>
                 <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>

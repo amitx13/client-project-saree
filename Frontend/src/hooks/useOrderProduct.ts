@@ -20,7 +20,29 @@ export const useOrderProduct = async (token:string, email:string, sareeId:string
         if(e.response){
             return e.response.data
         }else{
-            return { status: false, message:"Something went wrong!" };
+            return { success: false, message:"Something went wrong!" };
+        }
+    }
+}
+
+
+export const useUserOrderDetails = async (token:string, userId:string) => {
+    if (!token || !userId ) {
+        return null;
+    }
+    try{
+        const res = await api.get(`${API_BASE_URL}/api/v1/user/userOrderStatus/${userId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return res.data;
+    }catch (e:any){
+        if(e.response){
+            return e.response.data
+        }else{
+            return { success: false, message:"Something went wrong!" };
         }
     }
 }
