@@ -96,9 +96,9 @@ export default function Login() {
             })
             return
         }
+        setIsLoading(true);
 
         const res = await useForgetPassword(forgotPasswordEmail)
-        console.log("reset password res", res)
 
         if(res.success){
             toast({
@@ -114,6 +114,7 @@ export default function Login() {
                 variant: "destructive",
             })
         }
+        setIsLoading(false);
     }
 
     return (
@@ -183,7 +184,9 @@ export default function Login() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" onClick={handleForgotPassword}>Send Reset Link</Button>
+                            <Button type="submit" disabled={isLoading} onClick={handleForgotPassword} className='hover:bg-blue-500'>
+                                {isLoading ? <LoaderCircle className="animate-spin" /> : "Send Reset Link"}
+                            </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

@@ -8,5 +8,6 @@ export const RouteSList = {
     activation : '/activation',
     login : '/login',
     register : '/register',
-    logout : '/logout'
+    logout : '/logout',
+    resetPassword : '/reset-password',
 }

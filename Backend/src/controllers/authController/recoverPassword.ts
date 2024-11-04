@@ -18,8 +18,10 @@ export const recoverPassword = async (req: Request, res: Response) => {
     }
 
     try {
+      const LowerCaseEmail = email.toLowerCase()
+
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email:LowerCaseEmail },
         });
         
         if (!user) {
@@ -54,29 +56,8 @@ export const recoverPassword = async (req: Request, res: Response) => {
 export const verifyResetToken = async (req: Request, res: Response) => {
   const { token } = req.params;
 
-  try {
-    const tokenRecord = await prisma.passwordResetToken.findUnique({
-      where: { token },
-      include: { user: true },
-    });
-
-    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      res.status(400).json({ error: "Invalid or expired token." });
-      return
-    }
-
-    res.status(200).json({ message: "Token is valid.", userId: tokenRecord.userId });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error while verifying token." });
-  }
-};
-
-export const resetPassword = async (req: Request, res: Response) => {
-  const { token, newPassword } = req.body;
-
-  if (!newPassword || newPassword.length < 8) {
-    res.status(400).json({ error: "Password must be at least 8 characters long." });
+  if (!token) {
+    res.status(400).json({success:false, message: "Token is required." });
     return
   }
 
@@ -87,7 +68,38 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
 
     if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      res.status(400).json({ error: "Invalid or expired token." });
+      res.status(400).json({ success:false, message: "Invalid or expired token." });
+      return
+    }
+
+    res.status(200).json({success:true, message: "Token is valid.", userId: tokenRecord.userId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success:false, message:"Server error while verifying token." });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    res.status(400).json({ success:false, message: "Token and new password are required." });
+    return
+  }
+
+  if (!newPassword || newPassword.length < 8) {
+    res.status(400).json({ success:false, message:"Password must be at least 8 characters long." });
+    return
+  }
+
+  try {
+    const tokenRecord = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
+      res.status(400).json({ success:false, message:"Invalid or expired token." });
       return
     }
 
@@ -102,9 +114,9 @@ export const resetPassword = async (req: Request, res: Response) => {
       where: { token },
     });
 
-    res.status(200).json({ message: "Password reset successful." });
+    res.status(200).json({ success:true, message: "Password reset successful." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server error while resetting password." });
+    res.status(500).json({ success:false, message: "Server error while resetting password." });
   }
 };

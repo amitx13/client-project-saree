@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/toaster"
 import RewardsPage from "./components/appComponents/Reward"
 import NotFound from "./components/appComponents/NotFound"
 import useAuthInterceptor from "./hooks/useAuthInterceptor"
+import { ResetPassword } from "./components/appComponents/ResetPassword"
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path={RouteSList.activation} element={<Activation />} />
         <Route path={RouteSList.register} element={<Register />} />
         <Route path={RouteSList.login} element={<Login />} />
+        <Route path={RouteSList.resetPassword} element={<ResetPassword/>}/>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </ThemeProvider>

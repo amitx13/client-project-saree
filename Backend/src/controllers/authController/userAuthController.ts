@@ -32,8 +32,9 @@ export const registerUser = async (req: Request, res: Response) => {
             res.status(404).json({ message: "Referrer account is not active." });
             return;
         }
+        const LowerCaseEmail = email.toLowerCase()
 
-        const existingUserByEmail = await prisma.user.findUnique({ where: { email } });
+        const existingUserByEmail = await prisma.user.findUnique({ where: { email:LowerCaseEmail } });
         const existingUserByMobile = await prisma.user.findUnique({ where: { mobile } });
         if (existingUserByEmail || existingUserByMobile) {
             res.status(409).json({ message: "User already exists with this email or mobile." });
@@ -55,7 +56,7 @@ export const registerUser = async (req: Request, res: Response) => {
         const newUser = await prisma.user.create({
             data: {
                 name,
-                email,
+                email:LowerCaseEmail,
                 mobile,
                 password: hashedPassword,
                 referrerId,
@@ -104,10 +105,10 @@ export const loginUser = async (req: Request, res: Response) => {
         res.status(400).json({ message: "Email and password are required." });
         return;
     }
-
+    const LowerCaseEmail = email.toLowerCase();
     try {
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email:LowerCaseEmail },
         });
         if (!user) {
             res.status(404).json({ message: "User not found." });
