@@ -6,7 +6,7 @@ import { useUserState } from '@/recoil/user';
 import { useEffect, useState } from "react";
 import { useProductData } from "@/hooks/useProduct";
 import API_BASE_URL from "@/config";
-import { useOrderProduct, useUserOrderDetails  } from "@/hooks/useOrderProduct";
+import { useOrderProduct, useUserOrderDetails } from "@/hooks/useOrderProduct";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 interface Saree {
@@ -96,36 +96,36 @@ export default function Products() {
   if (product) userOrderDetails.name = product.name;
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className="container mx-auto p-4 space-y-12">
       <div>
-        <h1 className="text-3xl font-bold mb-6 text-center">Exquisite Indian Sarees</h1>
-        <p className="text-center mb-8 text-muted-foreground">Claim your saree</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <h1 className="text-4xl font-bold mb-6 text-center">Exquisite Indian Sarees</h1>
+        <p className="text-center mb-8 text-muted-foreground text-lg">Claim your saree and embrace elegance</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sarees?.map((saree) => (
-            <Card key={saree.id} className="flex flex-col ">
+            <Card key={saree.id} className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+              <div className="relative pt-[60%] overflow-hidden">
+                <img
+                  src={`${API_BASE_URL}/${saree.image}`}
+                  alt={saree.name}
+                  className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="text-lg">{saree.name}</CardTitle>
+                <CardTitle className="text-xl">{saree.name}</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="relative w-full pt-[100%] mb-4">
-                  <img
-                    src={`${API_BASE_URL}/${saree.image}`}
-                    alt={saree.name}
-                    className="absolute top-0 left-0 w-full h-full object-contain rounded-md"
-                  />
-                </div>
-                <p className="flex items-center text-xl font-bold text-primary">
-                  <IndianRupee size={16} strokeWidth={2.25} />
-                  {saree.price}
+                <p className="flex items-center text-2xl font-bold text-primary">
+                  <IndianRupee size={20} strokeWidth={2.25} className="mr-1" />
+                  {saree.price.toLocaleString('en-IN')}
                 </p>
               </CardContent>
               <CardFooter>
                 <Button
-                  className="w-full"
+                  className="w-full text-lg py-6"
                   onClick={() => handlePurchase(saree.id)}
-                  disabled={!!user?.orderStatus}
+                  // disabled={!!user?.orderStatus}
                 >
-                  Buy Now
+                  { "Buy Now"}
                 </Button>
               </CardFooter>
             </Card>
@@ -134,10 +134,7 @@ export default function Products() {
       </div>
 
       {userOrderDetails && (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Order History</h2>
-          {userOrderDetails && <OrderHistoryTable userData={userOrderDetails} />}
-        </div>
+        <OrderHistoryTable userData={userOrderDetails} />
       )}
     </div>
   );
@@ -156,7 +153,7 @@ const OrderHistoryTable = ({ userData }: { userData: UserOrderDetails }) => {
   };
 
   return (
-    <Card>
+    <Card >
       <CardHeader>
         <CardTitle>Order History</CardTitle>
       </CardHeader>
