@@ -13,7 +13,7 @@ export const recoverPassword = async (req: Request, res: Response) => {
     const { email } = req.body;
 
     if (!email) {
-        res.status(400).json({ error: "Email is required." });
+        res.status(400).json({ success:false, message: "Email is required." });
         return;
     }
 
@@ -23,7 +23,7 @@ export const recoverPassword = async (req: Request, res: Response) => {
         });
         
         if (!user) {
-            res.status(404).json({ error: "User not found." });
+            res.status(404).json({ success:false, message: "User not found." });
             return;
         }
 
@@ -37,16 +37,17 @@ export const recoverPassword = async (req: Request, res: Response) => {
           },
         });
 
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetLink = `${process.env.FRONTEND_URL}reset-password?token=${resetToken}`;
         const status = await sendPasswordResetEmail(email, resetLink);
+
         if (!status) {
-            res.status(500).json({ error: "Error sending password reset email. Try after sometime." });
+            res.status(500).json({ success:false, message: "Error sending password reset email. Try after sometime." });
             return;
         }
-        res.status(200).json({ message: "Password reset link sent to your email." });
+        res.status(200).json({success:true, message: "Password reset link sent to your email." });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal server error while recovering password" });
+        res.status(500).json({ success:false, message: "Internal server error while recovering password" });
     }
 };
 

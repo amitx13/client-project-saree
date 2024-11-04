@@ -9,6 +9,16 @@ import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast'
 import { useLogin } from '@/hooks/useLogin'
 import { useUserState } from '@/recoil/user'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
+import { useForgetPassword } from '@/hooks/useForgetPassword'
 
 export interface LoginFormData {
     email: string;
@@ -27,6 +37,9 @@ export default function Login() {
         email: '',
         password: '',
     })
+
+    const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+    const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -73,6 +86,36 @@ export default function Login() {
         setIsLoading(false);
     }
 
+
+    const handleForgotPassword = async() => {
+        if(!forgotPasswordEmail){
+            toast({
+                title: "Failed to Send Reset Link",
+                description: "Please enter your email",
+                variant: "destructive",
+            })
+            return
+        }
+
+        const res = await useForgetPassword(forgotPasswordEmail)
+        console.log("reset password res", res)
+
+        if(res.success){
+            toast({
+                title: "Password Reset Email Sent",
+                description: `A password reset link has been sent to ${forgotPasswordEmail}`,
+            })
+            setIsForgotPasswordOpen(false)
+            setForgotPasswordEmail('')
+        }else{
+            toast({
+                title: "Failed to Send Reset Link",
+                description: res.message,
+                variant: "destructive",
+            })
+        }
+    }
+
     return (
         <div className="max-h-screen flex items-start justify-center px-4 py-12 sm:px-6 lg:px-8"> {/*  bg-gray-100 */}
             <Card className="w-full max-w-md">
@@ -110,13 +153,40 @@ export default function Login() {
                 <CardFooter className="flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm text-muted-foreground">
                         Don't have an account?{' '}
-                        <div className="underline underline-offset-4 hover:text-primary" onClick={() => navigate('/register')}>
+                        <div className="underline underline-offset-4 hover:text-primary cursor-pointer" onClick={() => navigate('/register')}>
                             Sign up
                         </div>
                     </div>
-                    <a className="text-sm underline underline-offset-4 hover:text-primary" href="#">
-                        Privacy Policy
-                    </a>
+                    <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="link" className="text-sm p-0">Forgot Password?</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Forgot Password</DialogTitle>
+                                <DialogDescription>
+                                    Enter your email address and we'll send you a link to reset your password.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="forgotPasswordEmail" className="col-span-4">
+                                        Email
+                                    </Label>
+                                    <Input
+                                        id="forgotPasswordEmail"
+                                        placeholder="example@email.com"
+                                        className="col-span-4"
+                                        value={forgotPasswordEmail}
+                                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit" onClick={handleForgotPassword}>Send Reset Link</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </CardFooter>
             </Card>
         </div>

@@ -14,9 +14,8 @@ app.use(cors())
 
 //-----------------ADMIN ROUTES-----------------
 app.use('/api/v1/auth/admin', authRoutesAdmin);
-app.use('/api/v1/admin',adminRoutes);
-
-// app.use('/api/v1/admin',verifyAdmin,adminRoutes);
+// app.use('/api/v1/admin',adminRoutes);
+app.use('/api/v1/admin',verifyAdmin,adminRoutes);
 //-----------------ADMIN ROUTES-----------------
 
 //-----------------USER ROUTES-----------------
