@@ -11,21 +11,33 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Copy, Share2, Mail, MessageCircle, Smartphone, Link, Wand2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {useGeneratedCodes} from "@/hooks/useGeneratedCodes"
+import { useUserState } from "@/recoil/user"
 
 export default function ActivationCodeGenerator() {
+  const [user,] = useUserState()
   const { toast } = useToast()
-  const [codeCount, setCodeCount] = useState(1)
+  const [codeCount, setCodeCount] = useState(0)
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([])
 
-  const generateCodes = () => {
-    const codes = Array.from({ length: codeCount }, () =>
-      Math.random().toString(36).substring(2, 10).toUpperCase()
-    )
-    setGeneratedCodes(codes)
+  const generateCodes = async() => {
+    const codes = await useGeneratedCodes(user.token,codeCount)
+    if(codes.success){
+      setGeneratedCodes(codes.data)
+      toast({
+        title: "Codes Generated!",
+        description: "Activation codes generated successfully.",
+      })
+    }else{
+      toast({
+        title: "Error!",
+        description: "Failed to generate activation codes.",
+      })
+    }
   }
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedCodes.join("\n")).then(() => {
+    navigator.clipboard.writeText(generatedCodes.join(",\n")).then(() => {
       toast({
         title: "Copied!",
         description: "Activation codes copied to clipboard.",
@@ -61,7 +73,7 @@ export default function ActivationCodeGenerator() {
 
     window.open(url, "_blank")
   }
-
+console.log("codeCount:",codeCount)
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 p-4 sm:p-6 md:p-8 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">
@@ -85,6 +97,7 @@ export default function ActivationCodeGenerator() {
             <Button 
               onClick={generateCodes}
               className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
+              disabled={codeCount < 1 || typeof codeCount !== "number" || Number.isNaN(codeCount)}
             >
               <Wand2 className="mr-2 h-4 w-4" /> Generate Codes
             </Button>

@@ -19,7 +19,7 @@ export const verifyAdmin = async (req: Request, res: Response, next: NextFunctio
     try {
         const payload = jwt.verify(token, JWT_SECRET);
         
-        if (payload && typeof payload === "object" && payload.Role === "Admin") {
+        if (payload && typeof(payload) === "object" && payload.Role === "ADMIN") {
             next();
         } else {
             res.status(403).json({ error: "Unauthorized - Admin access required" });

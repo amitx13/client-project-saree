@@ -152,7 +152,7 @@ export const createMultipleActivationCodes = async (req: Request, res: Response)
     const { count } = req.body
   
     if (!count || typeof count !== 'number' || count <= 0) {
-      res.status(400).json({ error: "Invalid request. Please provide a valid positive integer for 'count'." })
+      res.status(400).json({ success:false ,message: "Invalid request. Please provide a valid positive integer for 'count'." })
       return
     }
   
@@ -170,10 +170,10 @@ export const createMultipleActivationCodes = async (req: Request, res: Response)
         skipDuplicates: true  // Avoids errors if there are duplicate codes
       })
   
-      res.status(200).json({ status: true, codes })
+      res.status(200).json({ success: true, codes })
     } catch (error) {
       console.error('Error creating activation codes:', error)
-      res.status(500).json({ error: 'An unexpected error occurred.' })
+      res.status(500).json({ success:false ,message: 'An unexpected error occurred.' })
     }
   }
 
