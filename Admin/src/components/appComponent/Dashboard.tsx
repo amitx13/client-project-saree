@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer } from "recharts"
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   // Sample data - replace with actual data in a real application
   const revenueData = [
     { name: "Jan", total: 1500 },
@@ -25,11 +25,11 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 flex-1 space-y-4 p-5">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       </div>
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4 ">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analytics" disabled>Analytics</TabsTrigger>

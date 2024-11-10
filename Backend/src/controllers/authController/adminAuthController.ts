@@ -58,6 +58,11 @@ export const loginAdmin = async (req: Request, res: Response) => {
             return;
         }
 
+        if (user.role !== 'ADMIN') {
+            res.status(401).json({ message: "Unauthorized access." });
+            return;
+        }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             res.status(401).json({ message: "Invalid password." });
