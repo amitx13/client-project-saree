@@ -69,11 +69,10 @@ export default function Login() {
         }
         setIsLoading(true);
         const responce = await useLogin(formData)
-        if(responce.status){
-            updateUser(responce.data.user, responce.data.token)
+        if(responce.success){
+            updateUser(responce.data.Id, responce.data.token)
             toast({
-                title: "Login Successful",
-                description: `${responce.data.user.name} Loged In.`,
+                title: "Loged in successful",
             })
             navigate('/')
         }else{
@@ -152,12 +151,6 @@ export default function Login() {
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm text-muted-foreground">
-                        Don't have an account?{' '}
-                        <div className="underline underline-offset-4 hover:text-primary cursor-pointer" onClick={() => navigate('/register')}>
-                            Sign up
-                        </div>
-                    </div>
                     <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
                         <DialogTrigger asChild>
                             <Button variant="link" className="text-sm p-0">Forgot Password?</Button>

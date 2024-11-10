@@ -5,9 +5,8 @@ import API_BASE_URL from "@/config";
 export const useLogin = async (data: LoginFormData) => {
     try {
         const res = await api.post(`${API_BASE_URL}/api/v1/auth/admin/login`, data);
-        console.log(res)
         if (res.status === 200) {
-            return { success: true, data: res.data }
+            return { success: true, data: res.data.data }
         } else {
             return { success: false, data: res.data }
         }

@@ -23,7 +23,17 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
 
     try{
         // Create a new admin user
+        const user = await prisma.user.findUnique({
+            where: { email },
+        })
+
+        if (user) {
+            res.status(400).json({ message: "Admin already exists with this email." });
+            return;
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
+
         const newAdmin = await prisma.user.create({
             data: {
                 email,
@@ -33,7 +43,7 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
             },
         });
     
-        res.status(201).json({ message: "Admin registered successfully.", admin: newAdmin });
+        res.status(201).json({ message: "Admin registered successfully." });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error while registering admin" });
@@ -72,14 +82,15 @@ export const loginAdmin = async (req: Request, res: Response) => {
         const token = jwt.sign(
             { Role: user.role, email: user.email },
             JWT_SECRET,
-            { expiresIn: "24h" } 
         );
 
-        const { password: _, ...userInfo } = user;
+        const { id  } = user;
+
+        const data = {Id:id , token: token}
+
         res.status(200).json({
             message: "Login successful",
-            token,
-            user: userInfo
+            data
         });
     } catch (error) {
         console.error(error);

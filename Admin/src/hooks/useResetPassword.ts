@@ -1,13 +1,14 @@
 import api from "@/api";
 import API_BASE_URL from "@/config";
 
-export const useForgetPassword = async (email:string ) => {
-    if ( !email ) {
+export const useResetPassword = async (token:string , newPassword:string ) => {
+    if ( !token || !newPassword ) {
         return null;
     }
     try{
-        const res = await api.post(`${API_BASE_URL}/api/v1/auth/admin/forgetPassword/`, {
-            email: email,
+        const res = await api.post(`${API_BASE_URL}/api/v1/auth/admin/resetPassword/`, {
+            token: token,
+            newPassword:newPassword
         }, {
             headers: {
                 'Content-Type': 'application/json',

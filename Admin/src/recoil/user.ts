@@ -1,14 +1,5 @@
 import { atom, useRecoilState } from "recoil";
 
-interface User {
-    id:string;
-    name: string;
-    token: string;
-    tokenExpiry: number;
-}
-
-type token = string;
-
 export const userState = atom({
     key:"userState",
     default: JSON.parse(localStorage.getItem('userState') || 'null'),
@@ -17,11 +8,13 @@ export const userState = atom({
 export const useUserState = () => {
     const [user, setUser] = useRecoilState(userState);
 
-    const updateUser = (newUser:User,token:token) => {
-        newUser.token = token;
-        newUser.tokenExpiry = Date.now() + 1000 * 60 * 60 * 24;
-        setUser(newUser);
-        localStorage.setItem('userState', JSON.stringify(newUser));
+    const updateUser = (Id:string,token:string) => {
+        const Admin = {
+            token: token,
+            Id: Id,
+        };
+        setUser(Admin);
+        localStorage.setItem('userState', JSON.stringify(Admin));
     };
 
     return [user, updateUser];
