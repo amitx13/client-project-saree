@@ -77,11 +77,11 @@ export const dispatchOrder = async (req:Request, res:Response) => {
 }
 
 export const completeWithdrawalRequest = async (req: Request, res: Response) => {
-    const { requestId } = req.params;
+    const { requestId } = req.body;
 
     // Validate requestId
     if (!requestId) {
-        res.status(400).json({ error: "Invalid request. Please provide a valid requestId." });
+        res.status(400).json({ success:false, message: "Invalid request. Please provide a valid requestId." });
         return
     }
 
@@ -91,7 +91,7 @@ export const completeWithdrawalRequest = async (req: Request, res: Response) => 
         });
 
         if (!request) {
-            res.status(404).json({ error: "Withdrawal request not found." });
+            res.status(404).json({ success:false, message: "Withdrawal request not found." });
             return
         }
 
@@ -100,19 +100,19 @@ export const completeWithdrawalRequest = async (req: Request, res: Response) => 
             data: { status: "COMPLETED" },
         });
 
-        res.status(200).json({ message: "Withdrawal request completed." });
+        res.status(200).json({ success:true, message: "Withdrawal request completed." });
     } catch (error) {
         console.error("Error completing withdrawal request:", error);
-        res.status(500).json({ error: "An unexpected error occurred." });
+        res.status(500).json({ success:false, message: "An unexpected error occurred." });
     }
 };
 
 export const rejectWithdrawalRequest = async (req: Request, res: Response) => {
-    const { requestId } = req.params;
+    const { requestId } = req.body;
 
     // Validate requestId
     if (!requestId) {
-        res.status(400).json({ error: "Invalid request. Please provide a valid requestId." });
+        res.status(400).json({ success:false, message: "Invalid request. Please provide a valid requestId." });
         return
     }
 
@@ -122,7 +122,7 @@ export const rejectWithdrawalRequest = async (req: Request, res: Response) => {
         });
 
         if (!request) {
-            res.status(404).json({ error: "Withdrawal request not found." });
+            res.status(404).json({ success:false, message: "Withdrawal request not found." });
             return
         }
 
@@ -136,10 +136,10 @@ export const rejectWithdrawalRequest = async (req: Request, res: Response) => {
             data: { walletBalance: { increment: request.amount } },
         })
 
-        res.status(200).json({ message: "Withdrawal request REJECTED." });
+        res.status(200).json({ success:true, message: "Withdrawal request REJECTED." });
     } catch (error) {
         console.error("Error completing withdrawal request:", error);
-        res.status(500).json({ error: "An unexpected error occurred." });
+        res.status(500).json({ success:false, message: "An unexpected error occurred." });
     }
 };
 
@@ -307,5 +307,35 @@ export const getAllOrdersDetails = async (req: Request, res: Response) => {
         res.status(200).json({ success:true, ordersData });
     } catch (error) {
         res.status(500).json({ success:false, message: "Internal server error while fetching orders", error });
+    }
+}
+
+export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
+    try {
+        const requests = await prisma.withdrawalRequest.findMany({
+            include: { 
+            user: {
+                include: {
+                    BankDetails: true
+                }
+            }
+            }
+        });
+
+        const data = requests.map(request => {
+            return {
+                id: request.id,
+                userName: request.user.name,
+                mobile: request.user.mobile,
+                amount: request.amount,
+                status: request.status,
+                bankDetails: request.user.BankDetails,
+                requestedAt: request.createdAt
+            }
+        })
+
+        res.status(200).json({ success:true, data });
+    } catch (error) {
+        res.status(500).json({ success:false, message: "Internal server error while fetching withdrawal requests" });
     }
 }

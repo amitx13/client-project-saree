@@ -55,12 +55,13 @@ export default function UserManagement() {
   }
 
   useEffect(() => {
+    setIsLoading(true)
     fetchData()
+    setIsLoading(false)
   }, [])
 
-  if (!users) return <div>Loading...</div>
 
-  const filteredUsers = users.filter(
+  const filteredUsers = (users || []).filter(
     (user) =>
       (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -98,7 +99,7 @@ export default function UserManagement() {
           <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
           <p className="text-pink-100 mt-2">Manage and track user information</p>
         </header>
-        <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
+        {!isLoading ? <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
             <Button
               onClick={() => { setShowInactive(false); setCurrentPage(1); }}
@@ -158,7 +159,7 @@ export default function UserManagement() {
                           {user.status ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{users.find((u) => u.id === user.referrer)?.email || "N/A"}</TableCell>
+                      <TableCell>{users && users.find((u) => u.id === user.referrer)?.email || "N/A"}</TableCell>
                       <TableCell className="pt-5 flex items-center"><IndianRupee scale={1} size={15} />{user.walletBalance}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
@@ -280,7 +281,7 @@ export default function UserManagement() {
               Next <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-        </main>
+        </main> : <div className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg text-center">Loading...</div>}
       </div>
     </div>
   )

@@ -48,7 +48,9 @@ export default function OrderManagement() {
   }
 
   useEffect(()=>{
+    setIsLoading(true)
     fetchAllUserOrdersDetails()
+    setIsLoading(false)
   },[])
 
   const handleDispatchToggle = async(Id: string) => {
@@ -70,11 +72,7 @@ export default function OrderManagement() {
     setIsLoading(false)
   }
 
-  if(!orders){
-    return <div>Loading...</div>
-  }
-
-  const filteredOrders = orders.filter(order =>
+  const filteredOrders = (orders ?? []).filter(order =>
     (order.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.sareeName.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (showHistory ? order.status : !order.status)
@@ -92,7 +90,7 @@ export default function OrderManagement() {
           <h1 className="text-2xl sm:text-3xl font-bold">Order Management</h1>
           <p className="text-pink-100 mt-2">View and manage customer orders</p>
         </header>
-        <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
+        {!isLoading ? <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
             <Button 
               onClick={() => {setShowHistory(false); setCurrentPage(1);}}
@@ -195,7 +193,7 @@ export default function OrderManagement() {
               Next <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-        </main>
+        </main>: <div className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg text-center">Loading...</div>}
       </div>
     </div>
   )
