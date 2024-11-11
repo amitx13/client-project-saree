@@ -73,7 +73,6 @@ export default function ActivationCodeGenerator() {
 
     window.open(url, "_blank")
   }
-console.log("codeCount:",codeCount)
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 p-4 sm:p-6 md:p-8 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -14,115 +14,70 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useUserOrdersDetails } from "@/hooks/useUserOrdersDetails"
+import { useUserState } from "@/recoil/user"
+import API_BASE_URL from "@/config"
+import { useOrderDispatch } from "@/hooks/useOrderDispatch"
 
 type Order = {
-  id: number
+  id: string
   userName: string
   sareeName: string
   orderPlacedAt: string
   price: number
   image: string
-  dispatched: boolean
+  status: boolean
 }
 
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    userName: "Alice Johnson",
-    sareeName: "Banarasi Silk",
-    orderPlacedAt: "2023-07-15T10:30:00Z",
-    price: 1299.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: false,
-  },
-  {
-    id: 2,
-    userName: "Bob Smith",
-    sareeName: "Kanjivaram Silk",
-    orderPlacedAt: "2023-07-16T14:45:00Z",
-    price: 1599.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: false,
-  },
-  {
-    id: 3,
-    userName: "Charlie Brown",
-    sareeName: "Chanderi Silk",
-    orderPlacedAt: "2023-07-17T09:15:00Z",
-    price: 999.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: true,
-  },
-  {
-    id: 4,
-    userName: "Diana Prince",
-    sareeName: "Mysore Silk",
-    orderPlacedAt: "2023-07-18T11:20:00Z",
-    price: 1799.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: true,
-  },
-  {
-    id: 5,
-    userName: "Ethan Hunt",
-    sareeName: "Patola Silk",
-    orderPlacedAt: "2023-07-19T16:00:00Z",
-    price: 2099.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: false,
-  },
-  {
-    id: 6,
-    userName: "Fiona Gallagher",
-    sareeName: "Bandhani Silk",
-    orderPlacedAt: "2023-07-20T13:30:00Z",
-    price: 1399.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: false,
-  },
-  {
-    id: 7,
-    userName: "George Weasley",
-    sareeName: "Tussar Silk",
-    orderPlacedAt: "2023-07-21T10:45:00Z",
-    price: 1699.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: true,
-  },
-  {
-    id: 8,
-    userName: "Hermione Granger",
-    sareeName: "Uppada Silk",
-    orderPlacedAt: "2023-07-22T09:00:00Z",
-    price: 1899.99,
-    image: "/placeholder.svg?height=100&width=100",
-    dispatched: false,
-  },
-]
 
 export default function OrderManagement() {
+  const [user,] = useUserState()
   const { toast } = useToast()
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [orders, setOrders] = useState<Order[]>()
   const [searchTerm, setSearchTerm] = useState("")
   const [showHistory, setShowHistory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const ordersPerPage = 5
+  const [isLoading,setIsLoading] = useState(false)
 
-  const handleDispatchToggle = (orderId: number) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, dispatched: !order.dispatched } : order
-    ))
-    const order = orders.find(o => o.id === orderId)
-    toast({
-      title: `Order ${order?.dispatched ? "Undispatched" : "Dispatched"}`,
-      description: `Order #${orderId} has been ${order?.dispatched ? "undispatched" : "dispatched"}.`,
-    })
+  const fetchAllUserOrdersDetails = async () => {
+    const res = await useUserOrdersDetails(user.token)
+    if(res && res.success){
+      setOrders(res.ordersData)
+    }
+  }
+
+  useEffect(()=>{
+    fetchAllUserOrdersDetails()
+  },[])
+
+  const handleDispatchToggle = async(Id: string) => {
+    setIsLoading(true)
+    const responce = await useOrderDispatch(user.token,Id)
+    if (responce && responce.success) {
+      fetchAllUserOrdersDetails()
+      toast({
+        title: "Order Dispatched",
+        description: "Order has been dispatched successfully",
+      })
+    }else{
+      toast({
+        title: "Error",
+        description: "Something went wrong, please try again",
+        variant: "destructive",
+      })
+    }
+    setIsLoading(false)
+  }
+
+  if(!orders){
+    return <div>Loading...</div>
   }
 
   const filteredOrders = orders.filter(order =>
     (order.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.sareeName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (showHistory ? order.dispatched : !order.dispatched)
+    (showHistory ? order.status : !order.status)
   )
 
   const indexOfLastOrder = currentPage * ordersPerPage
@@ -189,7 +144,7 @@ export default function OrderManagement() {
                     <TableCell>₹{order.price.toFixed(2)}</TableCell>
                     <TableCell>
                       <img
-                        src={order.image}
+                        src={`${API_BASE_URL}/${order.image}`}
                         alt={order.sareeName}
                         width={50}
                         height={50}
@@ -198,21 +153,22 @@ export default function OrderManagement() {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        variant={order.dispatched ? "default" : "outline"}
-                        className={`${order.dispatched ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"} text-white`}
+                        variant={order.status ? "default" : "outline"}
+                        className={`${order.status ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"} text-white`}
                       >
-                        {order.dispatched ? "Dispatched" : "Pending"}
+                        {order.status ? "Dispatched" : "Pending"}
                       </Badge>
                     </TableCell>
                     {!showHistory && (
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Switch
-                            checked={order.dispatched}
+                            checked={order.status}
+                            disabled={isLoading}
                             onCheckedChange={() => handleDispatchToggle(order.id)}
                           />
                           <span className="text-sm text-muted-foreground">
-                            {order.dispatched ? "Dispatched" : "Dispatch"}
+                            {order.status ? "Dispatched" : "Dispatch"}
                           </span>
                         </div>
                       </TableCell>

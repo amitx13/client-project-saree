@@ -45,6 +45,7 @@ export default function UserManagement() {
   const [showInactive, setShowInactive] = useState(false)
   const usersPerPage = 7
   const [currentReferalPage, setCurrentReferalPage] = useState(1)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const fetchData = async () => {
     const Data = await useFetchAllUsers(user.token)
@@ -72,6 +73,7 @@ export default function UserManagement() {
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
 
   const handleActivateUserAccount = async(userId: string) => {
+    setIsLoading(true)
     const res = await useActivateUserAccount(user.token, userId)
     if (res.success) {
       fetchData()
@@ -86,6 +88,7 @@ export default function UserManagement() {
         variant: "destructive",
       })
     }
+    setIsLoading(false)
   }
 
   return (
@@ -161,6 +164,7 @@ export default function UserManagement() {
                         <div className="flex items-center space-x-2">
                           {!user.status ? 
                           <Button
+                            disabled={isLoading}
                             onClick={() => handleActivateUserAccount(user.id)}
                             className="bg-green-500 hover:bg-green-600"
                           >Activate</Button> 

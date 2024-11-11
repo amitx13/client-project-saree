@@ -143,7 +143,7 @@ export default function Products() {
 const OrderHistoryTable = ({ userData }: { userData: UserOrderDetails }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "COMPLETED":
+      case "DISPATCHED":
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case "PENDING":
         return <Clock className="h-5 w-5 text-yellow-500" />;
@@ -172,8 +172,8 @@ const OrderHistoryTable = ({ userData }: { userData: UserOrderDetails }) => {
               <TableCell>{userData.name}</TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
-                  {getStatusIcon(userData.dispatch ? "COMPLETED" : "PENDING")}
-                  <span>{userData.dispatch ? "COMPLETED" : "PENDING"}</span>
+                  {getStatusIcon(userData.dispatch ? "DISPATCHED" : "PENDING")}
+                  <span>{userData.dispatch ? "DISPATCHED" : "PENDING"}</span>
                 </div>
               </TableCell>
             </TableRow>

@@ -56,25 +56,23 @@ export const deleteProduct = async (req:Request, res:Response) => {
 }
 
 export const dispatchOrder = async (req:Request, res:Response) => {
-    const {id, userId, sareeId} = req.body;
-    if (!id || !userId || !sareeId) {
-        res.status(400).json({message: "All fields are required"});
+    const {id} = req.body;
+    if (!id) {
+        res.status(400).json({success:false, message: "Order Id is required"});
         return
     }
     try {
         await prisma.order.update({
             where: {
                 id,
-                userId,
-                sareeId
             },
             data: {
                 dispatch: true
             }
         });
-        res.status(200).json({ message: "Order dispatched successfully" });
+        res.status(200).json({success:true, message: "Order dispatched successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Internal server error while dispatching order", error });
+        res.status(500).json({success:false, message: "Internal server error while dispatching order" });
     }
 }
 
@@ -281,5 +279,33 @@ export const activateUserAccount = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Error activating account:", error);
         res.status(500).json({ success: false, message: "An error occurred while activating the account" });
+    }
+}
+
+
+export const getAllOrdersDetails = async (req: Request, res: Response) => {
+    try {
+        const orders = await prisma.order.findMany({
+            include: {
+                saree: true,
+                user: true
+            }
+        });
+
+        const ordersData = orders.map(order => {
+            return {
+                id: order.id,
+                userName: order.user.name,
+                sareeName: order.saree.name,
+                orderPlacedAt: order.createdAt,
+                price: order.saree.price,
+                image: order.saree.image,
+                status: order.dispatch
+            }
+        })
+
+        res.status(200).json({ success:true, ordersData });
+    } catch (error) {
+        res.status(500).json({ success:false, message: "Internal server error while fetching orders", error });
     }
 }
