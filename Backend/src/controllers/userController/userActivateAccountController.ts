@@ -6,7 +6,7 @@ const MAX_LEVEL = 6;
 const INITIAL_REWARD = 300;
 const LEVEL_REWARD = 30;
 
-const updateUserRewardStatus = async (userId: string, level: number) => {
+export const updateUserRewardStatus = async (userId: string, level: number) => {
     try {
         const userReward = await prisma.userReward.findFirst({
             where: { userId, reward: { level } }
@@ -22,7 +22,7 @@ const updateUserRewardStatus = async (userId: string, level: number) => {
     }
 };
 
-const createLevelReward = async (userId: string) => {
+export const createLevelReward = async (userId: string) => {
     try {
         let currentReferrerId = userId;
         let level = 1;
@@ -59,7 +59,7 @@ const createLevelReward = async (userId: string) => {
     }
 };
 
-const updateNetworkSizeAndRewards = async (userId: string) => {
+export const updateNetworkSizeAndRewards = async (userId: string) => {
     let currentReferrerId = userId;
 
     while (currentReferrerId) {

@@ -21,8 +21,13 @@ export const useUserState = () => {
     const [user, setUser] = useRecoilState(userState);
 
     const updateUser = (newUser:User,token:token) => {
-        newUser.token = token;
-        newUser.tokenExpiry = Date.now() + 1000 * 60 * 60 * 24;
+        if(token){
+            newUser.token = token;
+            newUser.tokenExpiry = Date.now() + 1000 * 60 * 60 * 24;
+        } else {
+            newUser.token = user.token;
+            newUser.tokenExpiry = user.tokenExpiry;
+        }
         setUser(newUser);
         localStorage.setItem('userState', JSON.stringify(newUser));
     };

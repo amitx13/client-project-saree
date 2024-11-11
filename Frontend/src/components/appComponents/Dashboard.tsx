@@ -11,7 +11,7 @@ import { useUserData } from '@/hooks/useUserData'
 import ActivationPaymentModal from './ActivationPaymentModel'
 
 export default function Dashboard() {
-  const [user,] = useUserState()
+  const [user,updateUser] = useUserState()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [userData, setUserData] = useState<any>(null)
@@ -29,6 +29,18 @@ export default function Dashboard() {
       fetchUserData()
     }
   }, [user])
+
+  useEffect(() => {
+    const fetchdata = async () => {
+      const data = await useUserData(user.id, user.token);
+      if (data && data.user) {
+        const { id, name, email, membershipStatus, orderStatus } = data.user;
+        const updatedUserDate = { id, name, email, membershipStatus, orderStatus };
+        updateUser(updatedUserDate);
+      }
+    }
+    fetchdata()
+  },[])
 
   const activateAccount = () => {
     setIsOpen(true)

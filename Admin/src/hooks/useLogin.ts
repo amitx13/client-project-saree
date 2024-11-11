@@ -15,7 +15,7 @@ export const useLogin = async (data: LoginFormData) => {
         if(e.response){
             return e.response.data
         }else{
-            return { success: false, message:"Something went wrong!" };
+            return { success: false, message: e.message };
         }
     }
 }

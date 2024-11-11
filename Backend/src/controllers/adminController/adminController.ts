@@ -4,6 +4,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import crypto from 'crypto'
+import { createLevelReward, updateNetworkSizeAndRewards, updateUserRewardStatus } from "../userController/userActivateAccountController";
 
 
 const prisma = new PrismaClient();
@@ -198,5 +199,87 @@ export const createRewards = async (req: Request, res: Response) => {
         res.status(201).json({ message: "Reward created successfully" });
     } catch (error) {
         res.status(500).json({ message: "Internal server error while creating reward", error });
+    }
+}
+
+
+export const getAllUsers = async (req: Request, res: Response) => {
+    try {
+        const users = await prisma.user.findMany({
+            include: {
+                referrals: true,
+            }
+        });
+        const usersData = users.filter(user => user.role !== "ADMIN");
+        const userData = usersData.map(user => {
+            return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                registrationDate: user.createdAt,          
+                status: user.membershipStatus,
+                referrer: user.referrerId,
+                referrals: user.referrals.map(referral => ({
+                    email: referral.email,
+                    status: referral.membershipStatus
+                })),
+                walletBalance: user.walletBalance,
+            }
+        })
+
+        res.status(200).json({success:true, userData });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error while fetching users", error });
+    }
+}
+
+export const activateUserAccount = async (req: Request, res: Response) => {
+    const { userId } = req.body;
+    if (!userId) {
+        res.status(400).json({ success: false, message: "User ID is required" });
+        return;
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ success: false, message:"User not found" });
+            return;
+        }
+
+        if (user.membershipStatus) {
+            res.status(400).json({ success: false, message: "Account is already activated" });
+            return;
+        }
+
+        await prisma.user.update({ where: { id: userId }, data: { membershipStatus: true } });
+
+        const rewards = await prisma.reward.findMany();
+
+        const userRewards = rewards.map((reward) => ({
+          userId: user.id,
+          rewardId: reward.id,
+          isClaimable: false,
+          isClaimed: false,
+        }));
+      
+        await prisma.userReward.createMany({ data: userRewards });
+
+        if (user.referrerId) {
+            const parentUser = await prisma.user.findUnique({
+                where: { id: user.referrerId },
+                include: { referrals: true }
+            });
+            if (parentUser?.referrals.length === 10) await updateUserRewardStatus(parentUser.id, 1);
+
+            await createLevelReward(user.referrerId);
+            await updateNetworkSizeAndRewards(user.referrerId);
+        }
+
+        res.status(200).json({ success: true, message: "Account activated successfully"});
+
+    } catch (error) {
+        console.error("Error activating account:", error);
+        res.status(500).json({ success: false, message: "An error occurred while activating the account" });
     }
 }

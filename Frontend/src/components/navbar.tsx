@@ -23,7 +23,7 @@ interface AvatarProps {
 }
 
 function AvatarDemo({ name, membershipStatus }: AvatarProps) {
-    const FirstAndLastLetter = name.split(" ").map((n) => n[0]).join("");
+    const FirstAndLastLetter = name && name.split(" ").map((n) => n[0]).join("");
     return (
         <div className="flex items-center">
             <Avatar>

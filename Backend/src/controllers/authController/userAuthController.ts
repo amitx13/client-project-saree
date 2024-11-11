@@ -28,7 +28,7 @@ export const registerUser = async (req: Request, res: Response) => {
     try {
         const referrer = await prisma.user.findUnique({ where: { id: referralCode } });
 
-        if(!referrer?.membershipStatus){
+        if(referrer && !referrer.membershipStatus){
             res.status(404).json({ message: "Referrer account is not active." });
             return;
         }
