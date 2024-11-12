@@ -47,20 +47,21 @@ export const addProduct = async (req:Request, res:Response) => {
 }
 
 export const deleteProduct = async (req:Request, res:Response) => {
-    const {id} = req.body;
+    const {id} = req.params;
     if (!id) {
-        res.status(400).json({message: "All fields are required"});
+        res.status(400).json({success:false, message: "All fields are required"});
         return
     }
     try {
-        await prisma.saree.delete({
+        const data = await prisma.saree.delete({
             where: {
                 id
             }
         });
-        res.status(200).json({ message: "Saree deleted successfully" });
+        fs.unlinkSync(data.image);
+        res.status(200).json({success:true, message: "Saree deleted successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Internal server error while deleting saree", error });
+        res.status(500).json({ success:false, message: "Internal server error while deleting saree", error });
     }
 }
 
@@ -378,3 +379,62 @@ export const updateProductStock = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, message: "Internal server error while updating product stock" });
     }
 };
+
+export const getDashboardData = async (req: Request, res: Response) => {
+    try{
+        const Userdata = await prisma.user.findMany({
+            include:{
+                referrals:true,
+                orders:true
+
+            }
+        })
+        const users = Userdata.filter(user => user.role !== "ADMIN");
+        const totalUsers = users.length;
+        const totalActiveUsers = users.filter(user => user.membershipStatus);
+        const totalActiveUsersOrders = totalActiveUsers.reduce((acc, user) => acc + user.orders.length, 0);
+        const Top5UserWithMostReferrals = users.sort((a, b) => b.referrals.length - a.referrals.length).slice(0, 5);
+
+        const Top5UserWithMostReferralsData = Top5UserWithMostReferrals.map(user => {
+            return {
+                name:user.name,
+                referralsCount:user.referrals.length
+            }
+        })
+
+        const today = new Date();
+        const startOfDay = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const NewUserActivity = await prisma.user.findMany({
+            where: {
+            createdAt: {
+                gte: startOfDay
+            }
+            }
+        });
+
+        const pendingOrders = await prisma.order.findMany({
+            where:{
+                dispatch:false
+            }
+        })
+
+        const todayActivity = {
+            newUsers: NewUserActivity.length,
+            pendingOrders: pendingOrders.length,
+        }
+
+        const data = {
+            totalUsers,
+            totalActiveUsers: totalActiveUsers.length,
+            totalActiveUsersOrders,
+            Top5UserWithMostReferralsData,
+            todayActivity
+        }
+
+        res.status(200).json({ success:true, data });
+    } catch {
+        res.status(500).json({ success:false, message: "Internal server error while fetching dashboard data" });
+    }
+}

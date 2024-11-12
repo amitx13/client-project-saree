@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from "multer";
-import { activateUserAccount, addProduct, createMultipleActivationCodes, createRewards, deleteProduct, dispatchOrder, getAllOrdersDetails, getAllProducts, getAllUsers, getAllWithdrawalRequests, updateProductStock } from '../controllers/adminController/adminController';
+import { activateUserAccount, addProduct, createMultipleActivationCodes, createRewards, deleteProduct, dispatchOrder, getAllOrdersDetails, getAllProducts, getAllUsers, getAllWithdrawalRequests, getDashboardData, updateProductStock } from '../controllers/adminController/adminController';
 import { completeWithdrawalRequest, rejectWithdrawalRequest } from '../controllers/adminController/adminController';
 
 const router = express.Router();
@@ -13,6 +13,7 @@ router.get('/getAllUsers',getAllUsers)
 router.get('/getAllOrdersDetails',getAllOrdersDetails)
 router.get('/getAllWithdrawalRequests',getAllWithdrawalRequests)
 router.get('/fetchAllProducts',getAllProducts)
+router.get('/fetchDashboardData',getDashboardData)
 
 //Post routes
 
@@ -30,6 +31,6 @@ router.put('/completeWithdrawalRequest', completeWithdrawalRequest)
 
 //Delete routes
 
-router.delete('/deleteproduct', deleteProduct)
+router.delete('/deleteproduct/:id', deleteProduct)
 
 export default router;

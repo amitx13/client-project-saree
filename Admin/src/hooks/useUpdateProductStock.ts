@@ -23,3 +23,23 @@ export const useUpdateProductStock = async(token:string, Id: string, Stock:boole
         }
     }
 }
+
+export const useDeleteProduct = async(token:string, id: string) => {
+    try {
+        const res = await api.delete(`${API_BASE_URL}/api/v1/admin/deleteproduct/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return res.data
+    }
+    catch (e:any){
+        if(e.response){
+            return e.response.data
+        }
+        else{
+            return { success: false, message:"Something went wrong!" };
+        }
+    }
+}

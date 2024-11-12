@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAddNewProduct, useFetchAllProducts } from "@/hooks/useFetchAllProducts"
 import { useUserState } from "@/recoil/user"
 import API_BASE_URL from "@/config"
-import { useUpdateProductStock } from "@/hooks/useUpdateProductStock"
+import { useDeleteProduct, useUpdateProductStock } from "@/hooks/useUpdateProductStock"
 
 type Product = {
   id: string;
@@ -83,10 +83,16 @@ export default function ProductManagementPage() {
 
     const responce = await useAddNewProduct(user.token,formData)
     if(responce.success){
+      setNewProduct({
+        name: "",
+        price: 0,
+        image: null,
+      })
+      setImage("")
+      fetchAllProducts()
       toast({
         title: "New Product Added Sucessfully!",
       })
-      fetchAllProducts()
     }else{
       toast({
         title: "Failed to Add Product!",
@@ -96,8 +102,22 @@ export default function ProductManagementPage() {
     }
     setIsLoading(false)
   }
-  const handleDeleteProduct = (id: string) => {
-    console.log("Delete product with id", id)
+  const handleDeleteProduct = async(id: string) => {
+    const data = await useDeleteProduct(user.token, id)
+    if(data.success){
+      fetchAllProducts()
+      toast({
+        title: "Product Deleted",
+        description: `${data.message}`,
+      })
+    }
+    else{
+      toast({
+        title: "Error",
+        description: `${data.message}`,
+        variant: "destructive",
+      })
+    }
   }
 
   const handleStockToggle = async(id: string,stock:boolean) => {

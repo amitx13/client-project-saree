@@ -1,28 +1,52 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer } from "recharts"
+import { useUserState } from "@/recoil/user"
+import { useDashboardData } from "@/hooks/useDashboardData"
+import { useEffect, useState } from "react"
+import { Users, ShoppingCart } from "lucide-react"
+
+interface DashboardData {
+  totalUsers: number;
+  totalActiveUsers: number;
+  totalActiveUsersOrders: number;
+  Top5UserWithMostReferralsData: {
+    name: string;
+    referralsCount: number;
+  }[];
+  todayActivity: {
+    newUsers: number;
+    pendingOrders: number;
+  };
+}
+
+
 
 export default function AdminDashboard() {
-  // Sample data - replace with actual data in a real application
-  const revenueData = [
-    { name: "Jan", total: 1500 },
-    { name: "Feb", total: 2300 },
-    { name: "Mar", total: 3200 },
-    { name: "Apr", total: 2800 },
-    { name: "May", total: 3600 },
-    { name: "Jun", total: 4200 },
-  ]
+  const [user] = useUserState()
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
 
-  const userActivityData = [
-    { name: "Mon", newUsers: 120, activatedAccounts: 95, pendingOrders: 35 },
-    { name: "Tue", newUsers: 150, activatedAccounts: 110, pendingOrders: 40 },
-    { name: "Wed", newUsers: 180, activatedAccounts: 130, pendingOrders: 45 },
-    { name: "Thu", newUsers: 190, activatedAccounts: 150, pendingOrders: 50 },
-    { name: "Fri", newUsers: 210, activatedAccounts: 170, pendingOrders: 55 },
-    { name: "Sat", newUsers: 160, activatedAccounts: 120, pendingOrders: 30 },
-    { name: "Sun", newUsers: 140, activatedAccounts: 100, pendingOrders: 25 },
-  ]
+  const fetchDashboardData = async () => {
+    const data = await useDashboardData(user.token)
+    if (data.success) {
+      setDashboardData(data.data)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  function ActivityItem({ icon: Icon, label, value, color }: { icon: React.ComponentType<{ className?: string }>, label: string, value: number, color: string }) {
+    return (
+      <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-black/60 rounded-lg backdrop-blur-sm transition-transform duration-300 hover:scale-105">
+        <div className="flex items-center space-x-3">
+          <Icon className={`h-6 w-6 ${color}`} />
+          <p className="font-medium text-gray-700 dark:text-gray-200">{label}</p>
+        </div>
+        <span className={`text-lg font-bold ${color}`}>{value}</span>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 flex-1 space-y-4 p-5">
@@ -32,11 +56,10 @@ export default function AdminDashboard() {
       <Tabs defaultValue="overview" className="space-y-4 ">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics" disabled>Analytics</TabsTrigger>
-          <TabsTrigger value="reports" disabled>Reports</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
             <Card className="bg-gradient-to-br from-pink-500 to-orange-400">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Total Users</CardTitle>
@@ -56,10 +79,10 @@ export default function AdminDashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">45,231</div>
-                <p className="text-xs text-white/80">+20.1% from last month</p>
+                <div className="text-2xl font-bold text-white">{dashboardData?.totalUsers}</div>
               </CardContent>
             </Card>
+
             <Card className="bg-gradient-to-br from-cyan-500 to-blue-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Active Users</CardTitle>
@@ -77,10 +100,10 @@ export default function AdminDashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">32,845</div>
-                <p className="text-xs text-white/80">+18.7% from last month</p>
+                <div className="text-2xl font-bold text-white">{dashboardData?.totalActiveUsers}</div>
               </CardContent>
             </Card>
+
             <Card className="bg-gradient-to-br from-green-400 to-emerald-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Total Orders</CardTitle>
@@ -99,35 +122,24 @@ export default function AdminDashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">12,234</div>
-                <p className="text-xs text-white/80">+7.4% from last month</p>
+                <div className="text-2xl font-bold text-white">{dashboardData?.totalActiveUsersOrders}</div>
               </CardContent>
             </Card>
+
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>Revenue Overview</CardTitle>
+          {dashboardData && <Card className="col-span-4 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 transition-all duration-300 hover:shadow-lg">
+              <CardHeader className="bg-white/40 dark:bg-black/40 backdrop-blur-sm">
+                <CardTitle className="text-2xl font-bold dark:text-blue-300">User Activity</CardTitle>
               </CardHeader>
-              <CardContent className="pl-2">
-                <ChartContainer
-                  config={{
-                    total: {
-                      label: "Total Revenue",
-                      color: "hsl(var(--chart-1))",
-                    },
-                  }}
-                  className="h-[200px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueData}>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <ActivityItem icon={Users} label="New Users" value={dashboardData?.todayActivity.newUsers} color="text-green-500" />
+                  <ActivityItem icon={ShoppingCart} label="Pending Orders" value={dashboardData?.todayActivity.pendingOrders} color="text-orange-500" />
+                </div>
               </CardContent>
-            </Card>
+            </Card>}
+            
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Top Referrers</CardTitle>
@@ -135,87 +147,20 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { name: "Alice Johnson", referrals: 45 },
-                    { name: "Bob Smith", referrals: 38 },
-                    { name: "Charlie Brown", referrals: 32 },
-                    { name: "Diana Ross", referrals: 28 },
-                    { name: "Ethan Hunt", referrals: 25 },
-                  ].map((user, index) => (
+                  {dashboardData?.Top5UserWithMostReferralsData.map((user, index) => (
                     <div key={index} className="flex items-center">
                       <div className="w-[50%] text-sm font-medium">{user.name}</div>
                       <div className="w-[30%] bg-slate-100 rounded-full h-2">
                         <div
                           className="bg-primary h-2 rounded-full"
-                          style={{ width: `${(user.referrals / 45) * 100}%` }}
+                          style={{ width: `${( user.referralsCount/ 100) * 100}%` }}
                         ></div>
                       </div>
                       <div className="w-[20%] text-right text-sm text-muted-foreground">
-                        {user.referrals}
+                        {user.referralsCount}
                       </div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>User Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="pl-2">
-                <ChartContainer
-                  config={{
-                    newUsers: {
-                      label: "New Users",
-                      color: "hsl(var(--chart-1))",
-                    },
-                    activatedAccounts: {
-                      label: "Activated Accounts",
-                      color: "hsl(var(--chart-2))",
-                    },
-                    pendingOrders: {
-                      label: "Pending Orders",
-                      color: "hsl(var(--chart-3))",
-                    },
-                  }}
-                  className="h-[200px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={userActivityData}>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line type="monotone" dataKey="newUsers" stroke="var(--color-newUsers)" strokeWidth={2} />
-                      <Line type="monotone" dataKey="activatedAccounts" stroke="var(--color-activatedAccounts)" strokeWidth={2} />
-                      <Line type="monotone" dataKey="pendingOrders" stroke="var(--color-pendingOrders)" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Network Growth</CardTitle>
-                <CardDescription>Monthly network growth rate</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center">
-                  <div className="text-5xl font-bold text-primary">8.7%</div>
-                  <p className="text-sm text-muted-foreground mt-2">Average monthly growth</p>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">New Connections</span>
-                    <span className="text-sm text-muted-foreground">1,234</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Active Partnerships</span>
-                    <span className="text-sm text-muted-foreground">567</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Community Engagement</span>
-                    <span className="text-sm text-muted-foreground">89%</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
