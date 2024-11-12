@@ -438,3 +438,13 @@ export const getDashboardData = async (req: Request, res: Response) => {
         res.status(500).json({ success:false, message: "Internal server error while fetching dashboard data" });
     }
 }
+
+
+export const getAllCodes = async (req: Request, res: Response) => {
+    try {
+        const data = await prisma.activationCode.findMany();
+        res.status(200).json({ success:true, data });
+    } catch (error) {
+        res.status(500).json({ success:false, message: "Internal server error while fetching codes" });
+    }
+}
