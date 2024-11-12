@@ -10,11 +10,19 @@ import { createLevelReward, updateNetworkSizeAndRewards, updateUserRewardStatus 
 const prisma = new PrismaClient();
 
 export const addProduct = async (req:Request, res:Response) => {
-    const {name} = req.body;
+    const {name , price} = req.body;
     if (!name || !req.file) {
-        res.status(400).json({message: "All fields are required"});
+        res.status(400).json({success:false, message: "All fields are required"});
         return
     }
+
+    const rate = parseFloat(price);
+
+    if (isNaN(rate)) {
+        res.status(400).json({success:false, message: "Price must be a number"});
+        return
+    }
+
     try {
         const compressedImagePath = path.join("public", "uploads", `${Date.now()}-${req.file.originalname}`);
         await sharp(req.file.path)
@@ -27,13 +35,14 @@ export const addProduct = async (req:Request, res:Response) => {
         const saree = await prisma.saree.create({
             data: {
                 name,
+                price:rate,
                 image: compressedImagePath 
             }
         });
 
-        res.status(201).json({ message: "Saree added successfully", saree });
+        res.status(201).json({success:true, message: "Saree added successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Internal server error while adding saree", error });
+        res.status(500).json({success:false, message: "Internal server error while adding saree" });
     }
 }
 
@@ -339,3 +348,33 @@ export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
         res.status(500).json({ success:false, message: "Internal server error while fetching withdrawal requests" });
     }
 }
+
+export const getAllProducts = async (req: Request, res: Response) => {
+    try {
+        const data = await prisma.saree.findMany();
+        res.status(200).json({ success:true, data });
+    } catch (error) {
+        res.status(500).json({ success:false, message: "Internal server error while fetching products" });
+    }
+}
+
+export const updateProductStock = async (req: Request, res: Response) => {
+    const { id, stock } = req.body;
+
+    if (!id || stock === undefined) {
+        res.status(400).json({ success: false, message: "Product Id and stock are required" });
+        return;
+    }
+
+    try {
+        const updatedProduct = await prisma.saree.update({
+            where: { id },
+            data: { stock }
+        });
+
+        res.status(200).json({ success: true, message: "Product stock updated successfully", product: updatedProduct });
+    } catch (error) {
+        console.error("Error updating product stock:", error);
+        res.status(500).json({ success: false, message: "Internal server error while updating product stock" });
+    }
+};

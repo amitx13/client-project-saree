@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,80 +14,119 @@ import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Trash2, Plus, Upload, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAddNewProduct, useFetchAllProducts } from "@/hooks/useFetchAllProducts"
+import { useUserState } from "@/recoil/user"
+import API_BASE_URL from "@/config"
+import { useUpdateProductStock } from "@/hooks/useUpdateProductStock"
 
 type Product = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
-  inStock: boolean;
+  stock: boolean;
+}
+
+interface AddProduct {
+  name: string;
+  price: number;
+  image: File | null;
 }
 
 export default function ProductManagementPage() {
+  const [user,] = useUserState()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [products, setProducts] = useState<Product[]>([
-    { id: 1, name: "Banarasi Silk Saree", price: 1299.99, image: "/placeholder.svg?height=100&width=100", inStock: true },
-    { id: 2, name: "Kanjivaram Silk Saree", price: 1599.99, image: "/placeholder.svg?height=100&width=100", inStock: true },
-    { id: 3, name: "Chanderi Silk Saree", price: 999.99, image: "/placeholder.svg?height=100&width=100", inStock: false },
-    { id: 4, name: "Mysore Silk Saree", price: 1099.99, image: "/placeholder.svg?height=100&width=100", inStock: true },
-    { id: 5, name: "Patola Silk Saree", price: 1899.99, image: "/placeholder.svg?height=100&width=100", inStock: true },
-    { id: 6, name: "Bandhani Silk Saree", price: 1199.99, image: "/placeholder.svg?height=100&width=100", inStock: true },
-    { id: 7, name: "Tussar Silk Saree", price: 1399.99, image: "/placeholder.svg?height=100&width=100", inStock: false },
-  ])
+  const [isLoading,setIsLoading] = useState(false)
 
-  const [newProduct, setNewProduct] = useState<Omit<Product, 'id' | 'inStock'>>({
+  const [products, setProducts] = useState<Product[]>()
+  const [image,setImage] = useState<string>("")
+  const [newProduct, setNewProduct] = useState<AddProduct>({
     name: "",
     price: 0,
-    image: "",
+    image: null,
   })
 
   const [currentPage, setCurrentPage] = useState(1)
   const productsPerPage = 5
 
-  const handleAddProduct = () => {
-    if (newProduct.name && newProduct.price > 0 && newProduct.image) {
-      setProducts([...products, { ...newProduct, id: Date.now(), inStock: true }])
-      setNewProduct({ name: "", price: 0, image: "" })
+
+  const fetchAllProducts = async () => {
+    const res = await useFetchAllProducts(user.token)
+    if(res && res.success){
+      setProducts(res.data)
+    }
+  }
+
+  useEffect(()=>{
+    setIsLoading(true)
+    fetchAllProducts()
+    setIsLoading(false)
+  },[])
+
+  const handleAddProduct = async () => {
+    if(!newProduct.name || !newProduct.price || !newProduct.image){
       toast({
-        title: "Product Added",
-        description: `${newProduct.name} has been added to the product list.`,
+        title: "Failed to Add Product!",
+        description: "Please fill all the fields",
+        variant: "destructive",
       })
-    } else {
+      return;
+    }
+
+    setIsLoading(true)
+    const formData = new FormData()
+    formData.append("name", newProduct.name)
+    formData.append("price", newProduct.price.toString())
+    formData.append("image", newProduct.image)
+
+    const responce = await useAddNewProduct(user.token,formData)
+    if(responce.success){
+      toast({
+        title: "New Product Added Sucessfully!",
+      })
+      fetchAllProducts()
+    }else{
+      toast({
+        title: "Failed to Add Product!",
+        description: responce.message,
+        variant: "destructive",
+      })
+    }
+    setIsLoading(false)
+  }
+  const handleDeleteProduct = (id: string) => {
+    console.log("Delete product with id", id)
+  }
+
+  const handleStockToggle = async(id: string,stock:boolean) => {
+    const data = await useUpdateProductStock(user.token, id, stock)
+    if(data.success){
+      fetchAllProducts()
+      toast({
+        title: "Stock Updated",
+        description: "Stock status updated successfully",
+      })
+    }else{
       toast({
         title: "Error",
-        description: "Please fill in all fields correctly.",
+        description: `${data.message}`,
         variant: "destructive",
       })
     }
   }
 
-  const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter(product => product.id !== id))
-    toast({
-      title: "Product Deleted",
-      description: "The product has been removed from the list.",
-    })
-  }
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 
-  const handleStockToggle = (id: number) => {
-    setProducts(products.map(product =>
-      product.id === id ? { ...product, inStock: !product.inStock } : product
-    ))
-    const product = products.find(p => p.id === id)
-    toast({
-      title: `Product ${product?.inStock ? "Out of Stock" : "In Stock"}`,
-      description: `${product?.name} is now ${product?.inStock ? "out of stock" : "in stock"}.`,
-    })
-  }
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    if (e.target.files && e.target.files[0]) {
+      setNewProduct({ ...newProduct, image: e.target.files[0] });
+    }
+    const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setNewProduct({ ...newProduct, image: reader.result as string })
+        setImage(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
@@ -95,9 +134,9 @@ export default function ProductManagementPage() {
 
   const indexOfLastProduct = currentPage * productsPerPage
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct)
+  const currentProducts = products ? products.slice(indexOfFirstProduct, indexOfLastProduct) : []
 
-  const totalPages = Math.ceil(products.length / productsPerPage)
+  const totalPages = products ? Math.ceil(products.length / productsPerPage) : 1
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 p-4 sm:p-6 md:p-8">
@@ -106,7 +145,7 @@ export default function ProductManagementPage() {
           <h1 className="text-2xl sm:text-3xl font-bold">Product Management</h1>
           <p className="text-pink-100 mt-2">Add, remove, and manage product inventory</p>
         </header>
-        <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
+        {!isLoading ? <main className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg">
           <Dialog>
             <DialogTrigger asChild>
               <Button className="mb-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white w-full sm:w-auto">
@@ -163,10 +202,10 @@ export default function ProductManagementPage() {
                       accept="image/*"
                       className="hidden"
                     />
-                    {newProduct.image && (
+                    {image && (
                       <div className="mt-2">
                         <img 
-                          src={newProduct.image} 
+                          src={image} 
                           alt="Preview" 
                           className="rounded-md w-24 h-24 object-cover"
                         />
@@ -197,7 +236,7 @@ export default function ProductManagementPage() {
                   <TableRow key={product.id}>
                     <TableCell>
                       <img
-                        src={product.image}
+                        src={`${API_BASE_URL}/${product.image}`}
                         alt={product.name}
                         className="rounded-md w-12 h-12 object-cover"
                       />
@@ -207,10 +246,10 @@ export default function ProductManagementPage() {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={product.inStock}
-                          onCheckedChange={() => handleStockToggle(product.id)}
+                          checked={product.stock}
+                          onCheckedChange={() => handleStockToggle(product.id, !product.stock)}
                         />
-                        <span>{product.inStock ? "In Stock" : "Out of Stock"}</span>
+                        <span className={`${product.stock ? "text-green-500":"text-red-500"}`}>{product.stock ? "In Stock" : "Out of Stock"}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -246,7 +285,7 @@ export default function ProductManagementPage() {
               Next <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-        </main>
+        </main>: <div className="bg-white/80 backdrop-blur-sm shadow-xl p-4 sm:p-6 rounded-b-lg text-center">Loading...</div>}
       </div>
     </div>
   )

@@ -31,6 +31,15 @@ export const createOrder = async (req: Request, res: Response) => {
             return
         }
 
+        const data = await prisma.saree.findUnique({
+            where: { id: sareeId },
+        })
+
+        if(data?.stock === false){
+            res.status(400).json({ success:false, message: "Saree is out of stock." });
+            return
+        }
+
         const order = await prisma.order.create({
             data: {
                 userId: user.id,

@@ -46,6 +46,7 @@ model Saree {
   id        String   @id @default(cuid())
   name      String
   price     Int      @default(750)
+  stock     Boolean  @default(true)
   image     String
   createdAt DateTime @default(now())
   orders    Order[]
@@ -57,7 +58,7 @@ model Order {
   sareeId   String
   dispatch  Boolean  @default(false)
   createdAt DateTime @default(now())
-  saree     Saree    @relation(fields: [sareeId], references: [id])
+  saree     Saree    @relation(fields: [sareeId], references: [id],onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

@@ -14,6 +14,7 @@ interface Saree {
   name: string;
   price: number;
   image: string;
+  stock:boolean
 }
 
 type Sarees = Saree[];
@@ -32,6 +33,8 @@ export default function Products() {
   const { toast } = useToast();
   const [sarees, setSarees] = useState<Sarees | null>(null);
   const [userOrderDetails, setUserOrderDetails] = useState<UserOrderDetails | null>(null);
+
+  console.log("sarees",sarees)
 
   useEffect(() => {
     const fetchSarees = async () => {
@@ -78,7 +81,7 @@ export default function Products() {
       toast({ title: "Already Purchased", description: "You have already purchased a saree", variant: "destructive" });
       return;
     }
-
+    
     try {
       const res = await useOrderProduct(user.token, user.email, sareeId);
       if (res.success) {
@@ -114,16 +117,19 @@ export default function Products() {
                 <CardTitle className="text-xl">{saree.name}</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow">
-                <p className="flex items-center text-2xl font-bold text-primary">
+                <div className="flex justify-between">
+                <div className="flex items-center text-2xl font-bold text-primary">
                   <IndianRupee size={20} strokeWidth={2.25} className="mr-1" />
                   {saree.price.toLocaleString('en-IN')}
-                </p>
+                </div>
+                <div className={`${saree.stock ? "text-green-400":"text-red-400"}`}>{saree.stock?"IN-STOCK":"OUT-OF-STOCK"}</div>
+                </div>
               </CardContent>
               <CardFooter>
                 <Button
                   className="w-full text-lg py-6"
                   onClick={() => handlePurchase(saree.id)}
-                  // disabled={!!user?.orderStatus}
+                  disabled={!saree.stock}
                 >
                   { "Buy Now"}
                 </Button>

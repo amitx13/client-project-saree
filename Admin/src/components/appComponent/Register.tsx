@@ -7,6 +7,7 @@ import { EyeClosed, LoaderCircle } from 'lucide-react';
 import { Eye } from 'lucide-react';
 import { useCreateAccount } from "@/hooks/useCreateAccount";
 import { useToast } from '@/hooks/use-toast'
+import { useUserState } from '@/recoil/user'
 
 export interface RegisterFormData {
     name: string;
@@ -16,6 +17,7 @@ export interface RegisterFormData {
 
 
 export default function Register() {
+    const [user] = useUserState()
     const {toast} = useToast()
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +55,7 @@ export default function Register() {
         }
 
         setIsLoading(true);
-        const responce = await useCreateAccount(formData)
+        const responce = await useCreateAccount(user.token,formData)
         if(responce.success){
             toast({
                 title: "New Admin Registered Sucessfully!",

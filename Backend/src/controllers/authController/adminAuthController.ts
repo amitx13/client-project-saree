@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { Request, Response } from "express";
+import e, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -10,6 +10,8 @@ const prisma = new PrismaClient();
 
 export const registerNewAdmin = async (req: Request, res: Response) => {
     const { email, name, password } = req.body;
+
+    console.log(email, name, password);
 
     if (!email || !name || !password) {
         res.status(400).json({ message: "All fields are required." });
