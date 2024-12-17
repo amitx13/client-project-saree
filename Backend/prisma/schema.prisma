@@ -11,7 +11,6 @@ model User {
   id                 String               @id @default(cuid())
   email              String               @unique
   name               String
-  mobile             String?               @unique
   password           String
   networkSize        Int                  @default(0)
   membershipStatus   Boolean              @default(false)
@@ -21,6 +20,7 @@ model User {
   orderStatus        Boolean              @default(false)
   role               Role                 @default(USER)
   walletBalance      Float                @default(0)
+  mobile             String?              @unique
   address            Address[]
   BankDetails        BankDetails[]
   orders             Order[]
@@ -46,9 +46,9 @@ model Saree {
   id        String   @id @default(cuid())
   name      String
   price     Int      @default(750)
-  stock     Boolean  @default(true)
   image     String
   createdAt DateTime @default(now())
+  stock     Boolean  @default(true)
   orders    Order[]
 }
 
@@ -58,7 +58,7 @@ model Order {
   sareeId   String
   dispatch  Boolean  @default(false)
   createdAt DateTime @default(now())
-  saree     Saree    @relation(fields: [sareeId], references: [id],onDelete: Cascade)
+  saree     Saree    @relation(fields: [sareeId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
