@@ -131,7 +131,7 @@ export default function Register() {
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
                     <CardDescription className="text-center">
-                        to continue to mlm
+                        to continue to JD Lifestyle
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">

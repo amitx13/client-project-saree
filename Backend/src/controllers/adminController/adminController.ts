@@ -4,7 +4,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import crypto from 'crypto'
-import { createLevelReward, updateNetworkSizeAndRewards, updateUserRewardStatus } from "../userController/userActivateAccountController";
+import { referalChain, createReferalIncome, updateReferralLevels, updateRewardEligibility } from "../userController/userActivateAccountController";
 
 
 const prisma = new PrismaClient();
@@ -187,9 +187,9 @@ export const createMultipleActivationCodes = async (req: Request, res: Response)
   }
 
 export const createRewards = async (req: Request, res: Response) => {
-    const {name, description, level, amount} = req.body;
+    const {name, description, reqMembers, level, amount} = req.body;
 
-    if (!name || !description || !level || !amount) {
+    if (!name || !description || !reqMembers || !level || !amount) {
         res.status(400).json({message: "All fields are required"});
         return
     }
@@ -199,6 +199,7 @@ export const createRewards = async (req: Request, res: Response) => {
             data: {
                 name,
                 description,
+                reqMembers,
                 level,
                 amount
             }
@@ -260,8 +261,6 @@ export const activateUserAccount = async (req: Request, res: Response) => {
             return;
         }
 
-        await prisma.user.update({ where: { id: userId }, data: { membershipStatus: true } });
-
         const rewards = await prisma.reward.findMany();
 
         const userRewards = rewards.map((reward) => ({
@@ -271,17 +270,17 @@ export const activateUserAccount = async (req: Request, res: Response) => {
           isClaimed: false,
         }));
       
-        await prisma.userReward.createMany({ data: userRewards });
+        await prisma.$transaction([
+            prisma.user.update({ where: { id: userId }, data: { membershipStatus: true } }),
+            prisma.userReward.createMany({ data: userRewards }),
+            prisma.levelReward.create({ data: { userId: user.id }})
+        ]);
 
         if (user.referrerId) {
-            const parentUser = await prisma.user.findUnique({
-                where: { id: user.referrerId },
-                include: { referrals: true }
-            });
-            if (parentUser?.referrals.length === 10) await updateUserRewardStatus(parentUser.id, 1);
-
-            await createLevelReward(user.referrerId);
-            await updateNetworkSizeAndRewards(user.referrerId);
+            const referralChain = await referalChain(user.referrerId);
+            await createReferalIncome(referralChain);
+            await updateReferralLevels(referralChain);
+            await updateRewardEligibility(referralChain);
         }
 
         res.status(200).json({ success: true, message: "Account activated successfully"});

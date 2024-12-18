@@ -3,92 +3,111 @@ import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
 const MAX_LEVEL = 6;
-const INITIAL_REWARD = 300;
-const LEVEL_REWARD = 30;
+const INITIAL_REWARD = 200;
+const LEVEL_REWARD = 10;
+const LAST_LEVEL_REWARD = 20;
 
-export const updateUserRewardStatus = async (userId: string, level: number) => {
-    try {
-        const userReward = await prisma.userReward.findFirst({
-            where: { userId, reward: { level } }
+
+export const referalChain = async (referrerId: string) => {
+    const referralChain: string[] = [referrerId]
+    let currentReferrerId: string = referrerId
+
+    // Find referral chain up to 6 levels
+    for (let level = 1; level < MAX_LEVEL; level++) {
+      const parentUser = await prisma.user.findUnique({
+        where: { id: currentReferrerId },
+        select: { referrerId: true }
+      })
+
+      if (!parentUser?.referrerId) break
+      
+      referralChain.push(parentUser.referrerId)
+      currentReferrerId = parentUser.referrerId
+    }
+
+    return referralChain
+}
+
+export const createReferalIncome = async (referalChain:string[]) => {
+    const updates = [];
+
+    for(let i = 0; i < referalChain.length; i++) {
+        const rewardAmount = i === 0 ? INITIAL_REWARD : i === 5 ? LAST_LEVEL_REWARD :LEVEL_REWARD;
+        updates.push(
+            prisma.user.update({
+                where: { id: referalChain[i] },
+                data: {
+                    walletBalance: { increment: rewardAmount },
+                    levelIncome: { increment: rewardAmount }
+                }
+            })
+        );
+    }
+
+    await Promise.all(updates);
+}
+
+export const updateReferralLevels = async (referralChain: string[]) => {
+    const updates = referralChain.map((userId, index) => {
+      const levelKey = `level${index + 1}Count`;
+      return prisma.levelReward.upsert({
+        where: { userId },
+        update: { [levelKey]: { increment: 1 } },
+        create: { userId, [levelKey]: 1 }
+      });
+    });
+  
+    await Promise.all(updates);
+};
+
+export const updateRewardEligibility = async (referralChain: string[]) => { 
+    for (const userId of referralChain) {
+        // Get user's current level counts
+        const levelReward = await prisma.levelReward.findUnique({
+          where: { userId }
         });
-        if (userReward) {
-            await prisma.userReward.update({
-                where: { id: userReward.id },
-                data: { isClaimable: true }
-            });
-        }
-    } catch (error) {
-        console.error("Error updating user reward status:", error);
-    }
-};
-
-export const createLevelReward = async (userId: string) => {
-    try {
-        let currentReferrerId = userId;
-        let level = 1;
-        const updates = [];
-
-        while (currentReferrerId && level <= MAX_LEVEL) {
-            const rewardAmount = level === 1 ? INITIAL_REWARD : LEVEL_REWARD;
-
-            updates.push(
-                prisma.user.update({
-                    where: { id: currentReferrerId },
-                    data: {
-                        walletBalance: { increment: rewardAmount },
-                        levelIncome: { increment: rewardAmount }
-                    }
-                })
-            );
-
-            const referrer = await prisma.user.findUnique({
-                where: { id: currentReferrerId }
-            });
-
-            if (referrer?.referrerId) {
-                currentReferrerId = referrer.referrerId;
-                level++;
-            } else {
-                break;
+    
+        if (!levelReward) continue;
+    
+        // Get all rewards
+        const rewards = await prisma.reward.findMany();
+        
+        // Check each reward's eligibility
+        const updates = rewards.map(async (reward) => {
+          let isEligible = false;
+    
+          switch (reward.level) {
+            case 3: // Silver
+              isEligible = levelReward.level3Count >= 1000;
+              break;
+            case 4: // Gold
+              isEligible = levelReward.level4Count >= 10000;
+              break;
+            case 5: // Platinum
+              isEligible = levelReward.level5Count >= 100000;
+              break;
+            case 6: // Diamond
+              isEligible = levelReward.level6Count >= 1000000;
+              break;
+          }
+    
+          // Update UserReward
+          return prisma.userReward.update({
+            where: {
+                userId_rewardId: {  // Use the compound unique identifier
+                    userId: userId,
+                    rewardId: reward.id
+                }
+            },
+            data: {
+                isClaimable: isEligible
             }
-        }
-
-        await Promise.all(updates); // Execute all updates in parallel
-    } catch (error) {
-        console.error("Error creating level reward:", error);
-    }
-};
-
-export const updateNetworkSizeAndRewards = async (userId: string) => {
-    let currentReferrerId = userId;
-
-    while (currentReferrerId) {
-        try {
-            const updatedUser = await prisma.user.update({
-                where: { id: currentReferrerId },
-                data: { networkSize: { increment: 1 } }
-            });
-
-            const { networkSize } = updatedUser;
-            if (networkSize === 100) await updateUserRewardStatus(currentReferrerId, 2);
-            else if (networkSize === 1000) await updateUserRewardStatus(currentReferrerId, 3);
-            else if (networkSize === 10000) await updateUserRewardStatus(currentReferrerId, 4);
-            else if (networkSize === 100000) await updateUserRewardStatus(currentReferrerId, 5);
-
-            const referrer = await prisma.user.findUnique({
-                where: { id: currentReferrerId }
-            });
-            if (referrer?.referrerId) {
-                currentReferrerId = referrer.referrerId;
-            } else {
-                break;
-            }
-        } catch (error) {
-            console.error("Error updating network size and rewards:", error);
-            break;
-        }
-    }
-};
+        });
+    });
+    
+        await Promise.all(updates);
+      }
+}
 
 export const activateAccountWithCode = async (req: Request, res: Response) => {
     const { userId, code } = req.body;
@@ -115,31 +134,27 @@ export const activateAccountWithCode = async (req: Request, res: Response) => {
             return;
         }
 
-        await prisma.$transaction([
-            prisma.activationCode.update({ where: { code }, data: { isUsed: true } }),
-            prisma.user.update({ where: { id: userId }, data: { membershipStatus: true } })
-        ]);
-
         const rewards = await prisma.reward.findMany();
 
         const userRewards = rewards.map((reward) => ({
-          userId: user.id,
-          rewardId: reward.id,
-          isClaimable: false,
-          isClaimed: false,
-        }));
+            userId: user.id,
+            rewardId: reward.id,
+            isClaimable: false,
+            isClaimed: false,
+          }))
+
+        await prisma.$transaction([
+            prisma.activationCode.update({ where: { code }, data: { isUsed: true } }),
+            prisma.user.update({ where: { id: userId }, data: { membershipStatus: true } }),
+            prisma.userReward.createMany({ data: userRewards }),
+            prisma.levelReward.create({ data: { userId: user.id }})
+        ]);
       
-        await prisma.userReward.createMany({ data: userRewards });
-
         if (user.referrerId) {
-            const parentUser = await prisma.user.findUnique({
-                where: { id: user.referrerId },
-                include: { referrals: true }
-            });
-            if (parentUser?.referrals.length === 10) await updateUserRewardStatus(parentUser.id, 1);
-
-            await createLevelReward(user.referrerId);
-            await updateNetworkSizeAndRewards(user.referrerId);
+            const referralChain = await referalChain(user.referrerId);
+            await createReferalIncome(referralChain);
+            await updateReferralLevels(referralChain);
+            await updateRewardEligibility(referralChain);
         }
 
         res.status(200).json({ success: true, message: "Account activated successfully"});

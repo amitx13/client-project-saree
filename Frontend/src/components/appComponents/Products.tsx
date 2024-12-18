@@ -38,12 +38,12 @@ export default function Products() {
 
   useEffect(() => {
     const fetchSarees = async () => {
-      try {
         const res = await useProductData();
+        if(res.status === false) {
+          toast({ title: "Error", description: "Failed to fetch products", variant: "destructive" });
+          return
+        }
         setSarees(res);
-      } catch (error) {
-        toast({ title: "Error", description: "Failed to fetch products", variant: "destructive" });
-      }
     };
     fetchSarees();
   }, [toast]);

@@ -93,7 +93,7 @@ const MyTeam = () => {
                 <Input
                   value={userData.sponsored.email}
                   readOnly
-                  className="flex-grow text-black"
+                  className="flex-grow"
                 />
                 <Button variant="outline" size="icon" onClick={() => copyReferralCode(userData.sponsored.email.toString())}>
                   <CopyIcon className="h-4 w-4" />
@@ -103,7 +103,7 @@ const MyTeam = () => {
                 <Input
                   value={userData.sponsored.phone}
                   readOnly
-                  className="flex-grow text-black"
+                  className="flex-grow"
                 />
                 <Button variant="outline" size="icon" onClick={() => copyReferralCode(userData.sponsored.phone.toString())}>
                   <CopyIcon className="h-4 w-4" />

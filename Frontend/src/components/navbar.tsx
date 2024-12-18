@@ -68,7 +68,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link to="/" className="text-xl font-bold">
-                            Logo
+                            JD Lifestyle
                         </Link>
                     </div>
 

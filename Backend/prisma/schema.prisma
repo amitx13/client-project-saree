@@ -27,6 +27,7 @@ model User {
   resetTokens        PasswordResetToken[]
   referrer           User?                @relation("UserReferrals", fields: [referrerId], references: [id])
   referrals          User[]               @relation("UserReferrals")
+  levelRewards       LevelReward[]
   userRewards        UserReward[]
   withdrawalRequests WithdrawalRequest[]
 }
@@ -101,6 +102,7 @@ model ActivationCode {
 model Reward {
   id          String       @id @default(cuid())
   name        String
+  reqMembers  Int
   description String
   level       Int          @unique
   amount      Float        @default(0)
@@ -116,6 +118,8 @@ model UserReward {
   claimDate   DateTime?
   reward      Reward    @relation(fields: [rewardId], references: [id])
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rewardId])
 }
 
 enum Role {
@@ -127,4 +131,17 @@ enum WithdrawalStatus {
   PENDING
   COMPLETED
   REJECTED
+}
+
+model LevelReward {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  level1Count  Int      @default(0)
+  level2Count  Int      @default(0)
+  level3Count  Int      @default(0)
+  level4Count  Int      @default(0)
+  level5Count  Int      @default(0)
+  level6Count  Int      @default(0)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime @updatedAt
 }
