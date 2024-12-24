@@ -6,16 +6,40 @@ import { useToast } from "@/hooks/use-toast"
 import { CopyIcon, CheckCircle } from 'lucide-react'
 import { User } from "lucide-react"
 import { useNavigate } from 'react-router-dom'
-import { useUserState } from '@/recoil/user'
+import { useLogout, useUserState } from '@/recoil/user'
 import { useUserData } from '@/hooks/useUserData'
 import ActivationPaymentModal from './ActivationPaymentModel'
+
+interface UserDataProps{
+  id: string;
+  name: string;
+  email: string;
+  membershipStatus: boolean;
+  orderStatus: boolean;
+  levelIncome: number;
+  networkSize: number;
+  role: "ADMIN" | "USER";
+  walletBalance: number;
+  levelRewards: {
+    id: string;
+    userId: string;
+    level1Count: number;
+    level2Count: number;
+    level3Count: number;
+    level4Count: number;
+    level5Count: number;
+    level6Count: number;
+    updatedAt: Date;
+}[];
+}
 
 export default function Dashboard() {
   const [user,updateUser] = useUserState()
   const { toast } = useToast()
   const navigate = useNavigate()
-  const [userData, setUserData] = useState<any>(null)
+  const [userData, setUserData] = useState<UserDataProps | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const logout = useLogout()
 
   useEffect(() => {
     if (!user) {
@@ -24,6 +48,16 @@ export default function Dashboard() {
     } else {
       const fetchUserData = async () => {
         const data = await useUserData(user.id, user.token);
+        console.log("user data", data)
+        if(data && data.success === false ){
+          toast({
+            title: "Failed to fetch user data",
+            description: "Please try Login again",
+            variant: "destructive",
+          })
+          logout()
+          navigate("/login");
+        }
         setUserData(data.user);
       };
       fetchUserData()
@@ -34,8 +68,8 @@ export default function Dashboard() {
     const fetchdata = async () => {
       const data = await useUserData(user.id, user.token);
       if (data && data.user) {
-        const { id, name, email, membershipStatus, orderStatus } = data.user;
-        const updatedUserDate = { id, name, email, membershipStatus, orderStatus };
+        const { id, Username, email, membershipStatus, orderStatus } = data.user;
+        const updatedUserDate = { id, Username, email, membershipStatus, orderStatus };
         updateUser(updatedUserDate);
       }
     }
@@ -48,17 +82,28 @@ export default function Dashboard() {
 
   const copyReferralCode = async () => {
     try {
-      await navigator.clipboard.writeText(user.id)
+      const textToCopy = user?.id || '';
+      const copyText = document.getElementById('referralCode') as HTMLInputElement;
+      
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        copyText.blur();
+      }
+      
       toast({
         title: "Copied!",
         description: "Referral code copied to clipboard",
-      })
-    } catch (err) {
+      });
+    } catch (err: any) {
       toast({
         title: "Failed to copy",
-        description: "Please try again",
+        description: "Please manually copy the referral code",
         variant: "destructive",
-      })
+      });
     }
   }
 
@@ -96,7 +141,7 @@ export default function Dashboard() {
               </Badge>
             ) : (
               <Button onClick={activateAccount} className="w-full" >
-                Activate Account (₹750)
+                Activate Account (₹550)
               </Button>
             )}
           </CardContent>
@@ -125,11 +170,12 @@ export default function Dashboard() {
         {user && <Card>
           <CardHeader>
             <CardTitle>Referral Program</CardTitle>
-            <CardDescription>Earn ₹300 for each referral</CardDescription>
+            <CardDescription>Earn ₹200 for each referral</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 mb-4">
               <input
+                id='referralCode'
                 value={user?.id}
                 readOnly
                 className="flex-grow p-2 border rounded text-black"
@@ -150,18 +196,29 @@ export default function Dashboard() {
             <CardDescription>Grow your team to unlock bigger rewards</CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
-        {userData && <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm">First Line</span>
-            <span className="font-semibold">{userData?.referrals.length || 0}</span>
-          </div>
-          {renderUserIcons(userData?.referrals.length || 0, 5)}
-          <div className="flex justify-between items-center">
-            <span className="text-sm ">All Team</span>
-            <span className="font-semibold">{userData.networkSize}</span>
-          </div>
-          {renderUserIcons(userData?.networkSize || 0, 8)}
-        </div>}
+          {userData?.levelRewards[0] ? (
+              (() => {
+                const level2to6 = userData.levelRewards[0].level2Count + userData.levelRewards[0].level3Count + userData.levelRewards[0].level4Count + userData.levelRewards[0].level5Count + userData.levelRewards[0].level6Count;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Level 1</span>
+                      <span className="font-semibold">{userData.levelRewards[0].level1Count || 0}</span>
+                    </div>
+                    {renderUserIcons(userData.levelRewards[0].level1Count || 0, 5)}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Level 2 - 6</span>
+                      <span className="font-semibold">{level2to6}</span>
+                    </div>
+                    {renderUserIcons(level2to6, 8)}
+                  </div>
+                );
+              })()
+            ) : (
+              <div>
+                <p className="text-base font-bold">No Team Data Found</p>
+              </div>
+            )}
       </CardContent>
         </Card>}
 

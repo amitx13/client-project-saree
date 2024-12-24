@@ -2,15 +2,50 @@ import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from 'crypto';
+
 
 export const JWT_SECRET = process.env.JWT_SECRET || "mlmsupersecret"; 
 
 const prisma = new PrismaClient();
 
-export const registerUser = async (req: Request, res: Response) => {
-    const { name, email, mobile, password, address, referralCode, bankDetails } = req.body;
+export async function generateUserId(){
+  const generateFiveDigitNumber = (): string => {
+    // Generate a random number between 0 and 99999
+    const randomBytes = crypto.randomBytes(4);
+    const number = Math.abs(randomBytes.readInt32BE(0) % 100000);
+    // Pad with leading zeros to ensure 5 digits
+    return number.toString().padStart(5, '0');
+  };
 
-    if (!name || !email || !mobile || !password || !address || !address.houseNo || !address.city || !address.state || !address.pinCode || !bankDetails || !bankDetails.accountNo || !bankDetails.ifscCode || !bankDetails.bankName) {
+  let userId: string;
+  let isUnique = false;
+  let attempts = 0;
+  const maxAttempts = 10; 
+
+  while (!isUnique && attempts < maxAttempts) {
+    userId = `JD${generateFiveDigitNumber()}`;
+    
+    // Check if this ID already exists in the database
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!existingUser) {
+      isUnique = true;
+      return userId;
+    }
+
+    attempts++;
+  }
+  return null;
+}
+
+
+export const registerUser = async (req: Request, res: Response) => {
+    const { fullName,userName, email, mobile, password, address, referralCode, bankDetails } = req.body;
+
+    if (!fullName || !userName || !email || !mobile || !password || !address || !address.houseNo || !address.city || !address.state || !address.pinCode || !bankDetails || !bankDetails.accountNo || !bankDetails.ifscCode || !bankDetails.bankName) {
         res.status(400).json({ message: "All fields are required." });
         return;
     }
@@ -32,16 +67,6 @@ export const registerUser = async (req: Request, res: Response) => {
             res.status(404).json({ message: "Referrer account is not active." });
             return;
         }
-        const LowerCaseEmail = email.toLowerCase()
-
-        const existingUserByEmail = await prisma.user.findUnique({ where: { email:LowerCaseEmail } });
-        const existingUserByMobile = await prisma.user.findUnique({ where: { mobile } });
-        if (existingUserByEmail || existingUserByMobile) {
-            res.status(409).json({ message: "User already exists with this email or mobile." });
-            return;
-        }
-
-        const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS || "10"));
 
         let referrerId = null;
         if (referralCode) {
@@ -53,10 +78,26 @@ export const registerUser = async (req: Request, res: Response) => {
             referrerId = referrer.id;
         }
 
+        const adminEmail = await prisma.user.findFirst({ where: { email:email, role:"ADMIN" } });
+        if(adminEmail){
+            res.status(404).json({ message: "Email already exists." });
+            return
+        }
+        const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS || "10"));
+
+        const userId: string|null = await generateUserId();
+
+        if(!userId){
+            res.status(500).json({ message: "Error generating user ID. TryAgain" });
+            return;
+        }
+
         const newUser = await prisma.user.create({
             data: {
-                name,
-                email:LowerCaseEmail,
+                id:userId,
+                fullName,
+                Username:userName,
+                email:email.toLowerCase(),
                 mobile,
                 password: hashedPassword,
                 referrerId,
@@ -84,7 +125,7 @@ export const registerUser = async (req: Request, res: Response) => {
             JWT_SECRET,
             { expiresIn: "24h" } 
         );
-        const { password: _,referrerId:__,address:___,BankDetails:____,networkSize:_____,role:______,levelIncome:________,walletBalance:_________,createdAt:__________, ...userInfo } = newUser;
+        const { password: _,referrerId:__,address:___,BankDetails:____,role:______,levelIncome:________,walletBalance:_________,createdAt:__________, ...userInfo } = newUser;
 
         res.status(201).json({
             message: "User registered successfully",
@@ -93,22 +134,35 @@ export const registerUser = async (req: Request, res: Response) => {
         });
 
     } catch (error:any) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+        if (error.code === "P2002") {
+            res.status(409).json({ message: "Username already exists." });
+            return;
+        }
+        const errorMessage = error.message.match(/message: "(.*?)"/)?.[1]; 
+        if(errorMessage){ 
+            res.status(500).json({ message:errorMessage });
+            return;
+        }
+        res.status(500).json({ message: "Internal server error while registering user." });
     }
 }
 
 export const loginUser = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { nameOrId, password } = req.body;
 
-    if (!email || !password) {
-        res.status(400).json({ message: "Email and password are required." });
+    if (!nameOrId || !password) {
+        res.status(400).json({ message: "Username/Id or password are required." });
         return;
     }
-    const LowerCaseEmail = email.toLowerCase();
     try {
-        const user = await prisma.user.findUnique({
-            where: { email:LowerCaseEmail },
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { Username: nameOrId },
+                    { id: nameOrId }
+                ],
+                role: 'USER'
+            },
         });
         if (!user) {
             res.status(404).json({ message: "User not found." });
@@ -127,7 +181,7 @@ export const loginUser = async (req: Request, res: Response) => {
             { expiresIn: "24h" } 
         );
 
-        const { password: _,referrerId:__,networkSize:_____,role:______,levelIncome:________,walletBalance:_________,createdAt:__________, ...userInfo } = user;
+        const { password: _,referrerId:__,role:______,levelIncome:________,walletBalance:_________,createdAt:__________, ...userInfo } = user;
         res.status(200).json({
             message: "Login successful",
             token,

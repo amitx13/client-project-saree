@@ -153,9 +153,9 @@ export const rejectWithdrawalRequest = async (req: Request, res: Response) => {
     }
 };
 
-function generateActivationCode(): string {
+export function generateActivationCode(): string {
     return crypto.randomBytes(8).toString('hex')
-  }
+}
   
 export const createMultipleActivationCodes = async (req: Request, res: Response) => {
     const { count } = req.body
@@ -223,7 +223,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
         const userData = usersData.map(user => {
             return {
                 id: user.id,
-                name: user.name,
+                name: user.Username, //To be changed to Name
                 email: user.email,
                 registrationDate: user.createdAt,          
                 status: user.membershipStatus,
@@ -283,6 +283,7 @@ export const activateUserAccount = async (req: Request, res: Response) => {
             await updateRewardEligibility(referralChain);
         }
 
+
         res.status(200).json({ success: true, message: "Account activated successfully"});
 
     } catch (error) {
@@ -304,7 +305,7 @@ export const getAllOrdersDetails = async (req: Request, res: Response) => {
         const ordersData = orders.map(order => {
             return {
                 id: order.id,
-                userName: order.user.name,
+                userName: order.user.Username,
                 sareeName: order.saree.name,
                 orderPlacedAt: order.createdAt,
                 price: order.saree.price,
@@ -334,7 +335,7 @@ export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
         const data = requests.map(request => {
             return {
                 id: request.id,
-                userName: request.user.name,
+                userName: request.user.Username,
                 mobile: request.user.mobile,
                 amount: request.amount,
                 status: request.status,
@@ -396,7 +397,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
         const Top5UserWithMostReferralsData = Top5UserWithMostReferrals.map(user => {
             return {
-                name:user.name,
+                name:user.Username,
                 referralsCount:user.referrals.length
             }
         })
@@ -409,6 +410,9 @@ export const getDashboardData = async (req: Request, res: Response) => {
             where: {
             createdAt: {
                 gte: startOfDay
+            },
+            role:{
+                not:"ADMIN"
             }
             }
         });

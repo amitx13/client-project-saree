@@ -10,18 +10,17 @@ const generateResetToken = (): string => {
 };
 
 export const recoverPassword = async (req: Request, res: Response) => {
-    const { email } = req.body;
+    const { userName } = req.body;
 
-    if (!email) {
+    if (!userName) {
         res.status(400).json({ success:false, message: "Email is required." });
         return;
     }
 
     try {
-      const LowerCaseEmail = email.toLowerCase()
 
         const user = await prisma.user.findUnique({
-            where: { email:LowerCaseEmail },
+            where: { Username:userName },
         });
         
         if (!user) {
@@ -40,7 +39,7 @@ export const recoverPassword = async (req: Request, res: Response) => {
         });
 
         const resetLink = `${process.env.FRONTEND_URL}reset-password?token=${resetToken}`;
-        const status = await sendPasswordResetEmail(email, resetLink);
+        const status = await sendPasswordResetEmail(user.email, resetLink);
 
         if (!status) {
             res.status(500).json({ success:false, message: "Error sending password reset email. Try after sometime." });
@@ -120,3 +119,27 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ success:false, message: "Server error while resetting password." });
   }
 };
+
+export const checkUserName = async (req: Request, res: Response) => {
+    const { userName } = req.params;
+
+    if (!userName) {
+        res.status(400).json({ success:false, message: "Username is required." });
+        return;
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { Username: userName },
+        });
+
+        if (user) {
+            res.status(200).json({ success:false, message: "Username already exists." });
+        } else {
+            res.status(200).json({ success:true, message: "Username available." });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success:false, message: "Internal server error while checking username." });
+    }
+}

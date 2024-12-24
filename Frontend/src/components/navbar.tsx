@@ -20,12 +20,14 @@ import { useLogout, useUserState } from "@/recoil/user";
 interface AvatarProps {
     name: string;
     membershipStatus: boolean;
+    onClick: () => void;
 }
 
-function AvatarDemo({ name, membershipStatus }: AvatarProps) {
+function AvatarDemo({ name, membershipStatus,onClick }: AvatarProps) {
+
     const FirstAndLastLetter = name && name.split(" ").map((n) => n[0]).join("");
     return (
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer" onClick={onClick}>
             <Avatar>
                 <AvatarFallback>{FirstAndLastLetter || "UR"}</AvatarFallback>
             </Avatar>
@@ -58,8 +60,6 @@ const Navbar = () => {
     useEffect(() => {
         setMenuOpen(false);
     }, [location.pathname]);
-
-
 
     return (
         <nav className="border-b">
@@ -116,7 +116,7 @@ const Navbar = () => {
                                     </div>
                                     }
                         <ModeToggle />
-                        {user && <AvatarDemo name={user.name} membershipStatus={user.membershipStatus} />}
+                        {user && <AvatarDemo name={user.Username} membershipStatus={user.membershipStatus} onClick={ () => navigate("/profile") }/>}
                     </div>
 
                     {/* Mobile Navigation */}
@@ -134,10 +134,10 @@ const Navbar = () => {
                             </SheetTrigger>
                             <SheetContent>
                                 <SheetHeader>
-                                    <SheetTitle>Company name</SheetTitle>
+                                    <SheetTitle>JD Lifestyle</SheetTitle>
                                 </SheetHeader>
                                 <div className="flex flex-col space-y-4 mt-4">
-                                    {user && <AvatarDemo name={user.name} membershipStatus={user.membershipStatus} />}
+                                    {user && <AvatarDemo name={user.Username} membershipStatus={user.membershipStatus} onClick={ () => navigate("/profile") }/>}
                                     {navItems.map((item) => {
                                         if (user) {
                                             if (item.title === "Login" || item.title === "Register") {

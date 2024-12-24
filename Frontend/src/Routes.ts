@@ -9,5 +9,6 @@ export const RouteSList = {
     login : '/login',
     register : '/register',
     logout : '/logout',
+    Profile: '/profile',
     resetPassword : '/reset-password',
 }

@@ -8,11 +8,11 @@ datasource db {
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  name               String
+  id                 String               @id
+  fullName           String
+  email              String               
+  Username           String               @unique
   password           String
-  networkSize        Int                  @default(0)
   membershipStatus   Boolean              @default(false)
   levelIncome        Int                  @default(0)
   referrerId         String?
@@ -20,7 +20,7 @@ model User {
   orderStatus        Boolean              @default(false)
   role               Role                 @default(USER)
   walletBalance      Float                @default(0)
-  mobile             String?              @unique
+  mobile             String?              
   address            Address[]
   BankDetails        BankDetails[]
   orders             Order[]

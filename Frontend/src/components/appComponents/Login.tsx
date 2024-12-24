@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,7 @@ import { EyeClosed, LoaderCircle } from 'lucide-react';
 import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast'
 import { useLogin } from '@/hooks/useLogin'
-import { useUserState } from '@/recoil/user'
+import { useLogout, useUserState } from '@/recoil/user'
 import {
     Dialog,
     DialogContent,
@@ -21,7 +21,7 @@ import {
 import { useForgetPassword } from '@/hooks/useForgetPassword'
 
 export interface LoginFormData {
-    email: string;
+    nameOrId: string;
     password: string;
 }
 
@@ -29,17 +29,28 @@ export interface LoginFormData {
 export default function Login() {
     const navigate = useNavigate()
     const {toast} = useToast()
-    const [, updateUser] = useUserState();
+    const [user, updateUser] = useUserState();
 
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<LoginFormData>({
-        email: '',
+        nameOrId: '',
         password: '',
     })
 
     const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
+
+    useEffect(() => {
+        if (user) {
+            toast({
+                title: "Already Logged In",
+                description: "Redirecting to Dashboard",
+            })
+            navigate('/dashboard')
+            return
+        }
+    }, [])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -51,7 +62,7 @@ export default function Login() {
 
 
     const onSubmit = async() => {
-        if(!formData.email || !formData.password){
+        if(!formData.nameOrId || !formData.password){
             toast({
                 title: "Failed to Loged In",
                 description: "Please fill all the fields",
@@ -73,7 +84,7 @@ export default function Login() {
             updateUser(responce.data.user, responce.data.token)
             toast({
                 title: "Login Successful",
-                description: `${responce.data.user.name} Loged In.`,
+                description: `${responce.data.user.Username} Loged In.`,
             })
             navigate('/')
         }else{
@@ -130,8 +141,8 @@ export default function Login() {
                     <div >
                         <div className="grid gap-2">
                             <div className="grid gap-1">
-                                <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" placeholder="m@example.com" type="email" value={formData.email} onChange={handleChange} />
+                                <Label htmlFor="nameOrId">Username/Id</Label>
+                                <Input id="nameOrId" name="nameOrId" placeholder="Enter UserName or UserId" type="text" value={formData.nameOrId} onChange={handleChange} />
                             </div>
                             <div className="grid gap-1 ">
                                 <Label htmlFor="password">Password</Label>
@@ -141,7 +152,7 @@ export default function Login() {
                                         className="absolute right-3 cursor-pointer"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
-                                        {showPassword ? <Eye /> : <EyeClosed />}
+                                        {showPassword ? <Eye className='text-black'/> : <EyeClosed className='text-black'/>}
                                     </div>
                                 </div>
                             </div>

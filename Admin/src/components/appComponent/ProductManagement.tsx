@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Trash2, Plus, Upload, ChevronLeft, ChevronRight } from "lucide-react"
+import { Trash2, Plus, Upload, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAddNewProduct, useFetchAllProducts } from "@/hooks/useFetchAllProducts"
 import { useUserState } from "@/recoil/user"
@@ -36,7 +36,7 @@ interface AddProduct {
 export default function ProductManagementPage() {
   const [user,] = useUserState()
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  let fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isLoading,setIsLoading] = useState(false)
 
@@ -140,6 +140,7 @@ export default function ProductManagementPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     if (e.target.files && e.target.files[0]) {
+      console.log(e.target.files[0])
       setNewProduct({ ...newProduct, image: e.target.files[0] });
     }
     const file = e.target.files?.[0]
@@ -223,12 +224,19 @@ export default function ProductManagementPage() {
                       className="hidden"
                     />
                     {image && (
-                      <div className="mt-2">
+                      <div className="mt-2 flex">
                         <img 
                           src={image} 
                           alt="Preview" 
                           className="rounded-md w-24 h-24 object-cover"
                         />
+                        <X className="cursor-pointer" onClick={()=>{
+                          setNewProduct({ ...newProduct, image: null });
+                          setImage("");
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ""; 
+                          }
+                        }}/>
                       </div>
                     )}
                   </div>

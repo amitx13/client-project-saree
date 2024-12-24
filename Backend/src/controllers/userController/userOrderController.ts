@@ -4,16 +4,16 @@ import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
 export const createOrder = async (req: Request, res: Response) => {
-    const { email, sareeId } = req.body;
+    const { id, sareeId } = req.body;
 
-    if (!email || !sareeId) {
-        res.status(400).json({ success:false, message:"Email and sareeId are required." });
+    if (!id || !sareeId) {
+        res.status(400).json({ success:false, message:"Invalid User or saree." });
         return
     }
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { id:id },
         });
 
         if (!user) {

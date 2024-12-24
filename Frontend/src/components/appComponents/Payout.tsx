@@ -54,7 +54,15 @@ export default function Payout() {
   const handleWithdraw = async () => {
     if (withdrawAmount && userData) {
       const amount = parseFloat(withdrawAmount)
-      if (amount > 0 && amount <= userData.walletBalance) {
+      if (amount < 200){
+        toast({
+          title: "Failed",
+          description: "Minimum withdrawal amount is ₹200",
+          variant: "destructive",
+        })
+        return
+      }
+      if (amount <= userData.walletBalance) {
         const res = await useUserWithdrawlRequest(user.id, user.token, amount)
         if (res.status) {
           setWithdrawAmount("")
@@ -65,6 +73,14 @@ export default function Payout() {
           const updatedUserData = await useUserWallet(user.id, user.token)
           setUserData(updatedUserData)
         } else {
+          if(res.message){
+            toast({
+              title: "Failed",
+              description: res.message,
+              variant: "destructive",
+            })
+            return
+          }
           toast({
             title: "Failed",
             description: "An unexpected error occurred Try again",
@@ -102,7 +118,8 @@ export default function Payout() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Withdraw Funds</CardTitle>
+            <CardTitle className='text-lg'>Withdraw Funds</CardTitle>
+            <CardDescription>Minimum withdrawal amount is ₹200</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -112,13 +129,13 @@ export default function Payout() {
                 placeholder="Enter amount"
                 type="number"
                 value={withdrawAmount}
-                disabled={userData?.walletBalance === 0}
+                disabled={userData?.walletBalance === 0 }
                 onChange={(e) => setWithdrawAmount(e.target.value)}
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleWithdraw} disabled={userData?.walletBalance === 0}>
+            <Button onClick={handleWithdraw} disabled={userData?.walletBalance === 0 || parseFloat(withdrawAmount) < 200}>
               Withdraw Funds
             </Button>
           </CardFooter>
@@ -145,10 +162,10 @@ export const WithdrawalTable = ({ userData }: { userData: userDataProps }) => {
   return (
     <Card>
     <CardHeader>
-      <CardTitle>Withdrawal History</CardTitle>
+      <CardTitle className='text-lg'>Withdrawal History</CardTitle>
     </CardHeader>
     <CardContent>
-      {userData && userData.withdrawalRequests.length > 0 && <Table>
+      {userData && userData.withdrawalRequests.length > 0 ? <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
@@ -174,7 +191,7 @@ export const WithdrawalTable = ({ userData }: { userData: userDataProps }) => {
             </TableRow>
           ))}
         </TableBody>
-      </Table>}
+      </Table>: <CardDescription >No Withdrawal History Found</CardDescription>}
     </CardContent>
   </Card>
   )

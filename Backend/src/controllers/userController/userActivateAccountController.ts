@@ -2,13 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
-const MAX_LEVEL = 6;
 const INITIAL_REWARD = 200;
 const LEVEL_REWARD = 10;
 const LAST_LEVEL_REWARD = 20;
 
 
-export const referalChain = async (referrerId: string) => {
+export const referalChain = async (referrerId: string,MAX_LEVEL=6) => {
     const referralChain: string[] = [referrerId]
     let currentReferrerId: string = referrerId
 
@@ -18,6 +17,8 @@ export const referalChain = async (referrerId: string) => {
         where: { id: currentReferrerId },
         select: { referrerId: true }
       })
+
+      console.log("called")
 
       if (!parentUser?.referrerId) break
       
@@ -43,8 +44,9 @@ export const createReferalIncome = async (referalChain:string[]) => {
             })
         );
     }
+    await Promise.all(updates)
 
-    await Promise.all(updates);
+    
 }
 
 export const updateReferralLevels = async (referralChain: string[]) => {
@@ -56,8 +58,9 @@ export const updateReferralLevels = async (referralChain: string[]) => {
         create: { userId, [levelKey]: 1 }
       });
     });
-  
-    await Promise.all(updates);
+
+    await Promise.all(updates)
+    
 };
 
 export const updateRewardEligibility = async (referralChain: string[]) => { 
@@ -66,13 +69,13 @@ export const updateRewardEligibility = async (referralChain: string[]) => {
         const levelReward = await prisma.levelReward.findUnique({
           where: { userId }
         });
+
+        if(levelReward?.level1Count === 0) continue;
     
         if (!levelReward) continue;
     
-        // Get all rewards
         const rewards = await prisma.reward.findMany();
         
-        // Check each reward's eligibility
         const updates = rewards.map(async (reward) => {
           let isEligible = false;
     
@@ -91,23 +94,23 @@ export const updateRewardEligibility = async (referralChain: string[]) => {
               break;
           }
     
-          // Update UserReward
           return prisma.userReward.update({
             where: {
-                userId_rewardId: {  // Use the compound unique identifier
+                userId_rewardId: {
                     userId: userId,
                     rewardId: reward.id
-                }
+                },
+                isClaimed: false
             },
             data: {
                 isClaimable: isEligible
             }
         });
     });
+
+    await Promise.all(updates);
     
-        await Promise.all(updates);
-      }
-}
+}}
 
 export const activateAccountWithCode = async (req: Request, res: Response) => {
     const { userId, code } = req.body;

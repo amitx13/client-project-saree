@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import e, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { generateUserId } from "./userAuthController";
 
 export const JWT_SECRET = process.env.JWT_SECRET || "mlmsupersecret"; 
 
@@ -10,8 +11,6 @@ const prisma = new PrismaClient();
 
 export const registerNewAdmin = async (req: Request, res: Response) => {
     const { email, name, password } = req.body;
-
-    console.log(email, name, password);
 
     if (!email || !name || !password) {
         res.status(400).json({ message: "All fields are required." });
@@ -26,7 +25,7 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
     try{
         // Create a new admin user
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { Username:name },
         })
 
         if (user) {
@@ -36,10 +35,18 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        let AdminId: string|null = await generateUserId();
+
+        if(!AdminId){
+            AdminId = Math.random().toString(36).substr(2, 9);
+        }
+
         const newAdmin = await prisma.user.create({
             data: {
+                id:AdminId,
                 email,
-                name,
+                fullName:name,
+                Username: name,
                 password: hashedPassword,
                 role: 'ADMIN',
             },
@@ -54,16 +61,17 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
 
 
 export const loginAdmin = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { name, password } = req.body;
 
-    if (!email || !password) {
+    if (!name || !password) {
         res.status(400).json({ message: "Email and password are required." });
         return;
     }
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { Username:name, role: 'ADMIN' },
+
         });
         if (!user) {
             res.status(404).json({ message: "Admin not found." });
@@ -82,7 +90,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
         }
 
         const token = jwt.sign(
-            { Role: user.role, email: user.email },
+            { Role: user.role, email: user.email ,id:user.id },
             JWT_SECRET,
         );
 

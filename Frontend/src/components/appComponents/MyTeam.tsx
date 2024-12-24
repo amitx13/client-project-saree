@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Phone, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useUserState } from "@/recoil/user";
+import { useLogout, useUserState } from "@/recoil/user";
 import { useNavigate } from "react-router-dom";
 import { useUserTeamData } from "@/hooks/useUserTeamData";
 import { Input } from "../ui/input";
@@ -21,13 +21,24 @@ interface UserDataProps {
     name: string
     mobile: string
   }[]
-  networkSize: number
+  level: {
+    id: string;
+    userId: string;
+    level1Count: number;
+    level2Count: number;
+    level3Count: number;
+    level4Count: number;
+    level5Count: number;
+    level6Count: number;
+    updatedAt: Date;
+}[]
 }
 
 const MyTeam = () => {
   const [user,] = useUserState()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const logout = useLogout()
 
   const [userData, setUserData] = useState<UserDataProps | null>(null)
 
@@ -38,6 +49,16 @@ const MyTeam = () => {
     } else {
       const fetchUserData = async () => {
         const userData = await useUserTeamData(user.id, user.token);
+        console.log("userData",userData)
+        if(userData && userData.success === false ){
+          toast({
+            title: "Failed to fetch user data",
+            description: "Please try Login again",
+            variant: "destructive",
+          })
+          logout()
+          navigate("/login");
+        }
         setUserData(userData);
       };
       fetchUserData()
@@ -122,19 +143,24 @@ const MyTeam = () => {
             <CardDescription>Grow your team through referrals to unlock even greater rewards!</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow">
-            {userData.networkSize ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">First Line</span>
-                  <span className="font-semibold">{userData.referrals.length || 0}</span>
-                </div>
-                {renderUserIcons(userData?.referrals.length || 0, 5)}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">All Team</span>
-                  <span className="font-semibold">{userData.networkSize}</span>
-                </div>
-                {renderUserIcons(userData?.networkSize || 0, 8)}
-              </div>
+            {userData.level[0] ? (
+              (() => {
+                const level2to6 = userData.level[0].level2Count + userData.level[0].level3Count + userData.level[0].level4Count + userData.level[0].level5Count + userData.level[0].level6Count;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Level 1</span>
+                      <span className="font-semibold">{userData.level[0].level1Count || 0}</span>
+                    </div>
+                    {renderUserIcons(userData.level[0].level1Count || 0, 5)}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Level 2 - 6</span>
+                      <span className="font-semibold">{level2to6}</span>
+                    </div>
+                    {renderUserIcons(level2to6, 8)}
+                  </div>
+                );
+              })()
             ) : (
               <div>
                 <p className="text-base font-bold">No Team Data Found</p>

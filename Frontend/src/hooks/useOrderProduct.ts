@@ -1,13 +1,13 @@
 import api from "@/api";
 import API_BASE_URL from "@/config";
 
-export const useOrderProduct = async (token:string, email:string, sareeId:string ) => {
-    if (!token || !email || !sareeId) {
+export const useOrderProduct = async (token:string, id:string, sareeId:string ) => {
+    if (!token || !id || !sareeId) {
         return null;
     }
     try{
         const res = await api.post(`${API_BASE_URL}/api/v1/user/order/`, {
-            email: email,
+            id: id,
             sareeId: sareeId
         }, {
             headers: {

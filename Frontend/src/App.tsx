@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "./components/navbar"
-import { Routes, Route, Navigate } from "react-router-dom"
+import { Routes, Route } from "react-router-dom"
 import { RouteSList } from "./Routes"
 import Dashboard from "./components/appComponents/Dashboard"
 import MyTeam from "./components/appComponents/MyTeam"
@@ -14,18 +14,21 @@ import RewardsPage from "./components/appComponents/Reward"
 import NotFound from "./components/appComponents/NotFound"
 import useAuthInterceptor from "./hooks/useAuthInterceptor"
 import { ResetPassword } from "./components/appComponents/ResetPassword"
+import Profile from "./components/appComponents/Profile"
+import Homepage from "./components/appComponents/Homepage"
 
 
 function App() {
 
   useAuthInterceptor()
 
+
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Navbar />
       <Toaster />
       <Routes>
-        <Route path="/" element={<Navigate to={RouteSList.home} />} />
+        <Route path="/" element={<Homepage/>} />
         <Route path={RouteSList.dashboard} element={<Dashboard />} />
         <Route path={RouteSList.myTeam} element={<MyTeam />} />
         <Route path={RouteSList.products} element={<Products />} />
@@ -35,6 +38,7 @@ function App() {
         <Route path={RouteSList.register} element={<Register />} />
         <Route path={RouteSList.login} element={<Login />} />
         <Route path={RouteSList.resetPassword} element={<ResetPassword/>}/>
+        <Route path={RouteSList.Profile} element={<Profile/>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </ThemeProvider>

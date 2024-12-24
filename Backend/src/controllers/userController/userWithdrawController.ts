@@ -8,7 +8,13 @@ export const createWithdrawalRequest = async (req: Request, res: Response) => {
 
     // Validate input
     if (!userId || amount <= 0) {
-        res.status(400).json({ error: "Invalid input. Ensure userId is provided and amount is greater than zero." });
+        res.status(400).json({ status: false, message: "Invalid input. Ensure userId is provided and amount is greater than zero." });
+        return
+    }
+
+    //minimum withdrawal amount is 200
+    if(amount < 200){
+        res.status(400).json({ status: false, message: "Minimum withdrawal amount is 200." });
         return
     }
 
@@ -18,7 +24,7 @@ export const createWithdrawalRequest = async (req: Request, res: Response) => {
         });
 
         if (!user) {
-            res.status(404).json({ error: "User not found." });
+            res.status(404).json({status: false, message: "User not found." });
             return
         }
 

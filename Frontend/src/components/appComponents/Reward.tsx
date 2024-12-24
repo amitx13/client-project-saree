@@ -5,6 +5,16 @@ import { useToast } from "@/hooks/use-toast"
 import { Gift, Users, Lock, Check } from 'lucide-react'
 import { useUserState } from '@/recoil/user'
 import { useUpdateUserReward, useUserReward } from '@/hooks/useUserReward'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useNavigate } from 'react-router-dom'
+
 
 interface UserReward {
   id: string;
@@ -38,20 +48,31 @@ interface UserRewardDataProps {
 }
 type UserRewardData = UserRewardDataProps[]
 
+interface LevelCountProps {
+    id: string;
+    userId: string;
+    level1Count: number;
+    level2Count: number;
+    level3Count: number;
+    level4Count: number;
+    level5Count: number;
+    level6Count: number;
+    updatedAt: Date;
+}
+
 export default function RewardsPage() {
 
   const [user,] = useUserState()
+  const navigate = useNavigate()
   const { toast } = useToast()
 
   const [rewardData, setRewardData] = useState<UserRewardData | null>(null)
-  const [teamSize, setTeamSize] = useState<number>(0)
-
+  const [levelCounts, setLevelCounts] = useState<LevelCountProps| null>(null)
   const fetchUserReward = async () => {
     const userRewardData = await useUserReward(user.id, user.token);
     if (userRewardData.success) {
       const rewards = userRewardData.rewards
       const userRewards = userRewardData.userData
-      setTeamSize(userRewardData.networkSize)
       const combinedData = userRewards.map((userReward: UserReward) => {
         const reward = rewards.find((r: reward) => r.id === userReward.rewardId);
         return {
@@ -59,7 +80,8 @@ export default function RewardsPage() {
           ...reward
         };
       });
-      setRewardData(combinedData);
+      setLevelCounts(userRewardData.levelRewards)
+      setRewardData(combinedData.sort((a:UserRewardDataProps, b:UserRewardDataProps) => a.amount - b.amount));
     } else {
       toast({
         title: "Failed to fetch rewards",
@@ -70,6 +92,14 @@ export default function RewardsPage() {
   }
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login")
+      return
+    }
+    if(user.membershipStatus === false){
+      navigate("/activation")
+      return
+    }
     fetchUserReward()
   }, [])
 
@@ -99,9 +129,6 @@ export default function RewardsPage() {
     return (
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6 text-center">Referral Rewards</h1>
-        <div className="mb-6 text-center">
-          <p className="text-lg mb-2">Current Team Size: <span className="font-bold">{teamSize}</span></p>
-        </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {rewardData && rewardData.map((reward) => (
             <Card key={reward.id} className="flex flex-col">
@@ -134,6 +161,48 @@ export default function RewardsPage() {
           )
           )}
         </div>
+        <div className="mt-6 text-center">
+          {levelCounts && <LevelCountTable levels={levelCounts} userId={user.id}/>}
+        </div>
       </div>
     )
+}
+
+
+export function LevelCountTable({levels,userId}: {levels:LevelCountProps,userId:string}) {
+  const levelCounts = Object.entries(levels).map(([key, value], index) => {
+    return { index:index+1, value };
+  });
+
+return (
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <Users className="w-6 h-6 text-primary" />
+        </div>
+        <div className='flex items-center justify-between w-full'>
+          <CardTitle className="text-2xl">Levels</CardTitle>
+          <p className="text-sm text-muted-foreground">User ID: {userId}</p>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='text-center'>Level</TableHead>
+              <TableHead className='text-center'>Members</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {levelCounts.map(({index,value}) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">Level {index}</TableCell>
+                <TableCell>{value}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
 }

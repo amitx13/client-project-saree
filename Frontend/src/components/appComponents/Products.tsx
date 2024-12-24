@@ -34,8 +34,6 @@ export default function Products() {
   const [sarees, setSarees] = useState<Sarees | null>(null);
   const [userOrderDetails, setUserOrderDetails] = useState<UserOrderDetails | null>(null);
 
-  console.log("sarees",sarees)
-
   useEffect(() => {
     const fetchSarees = async () => {
         const res = await useProductData();
@@ -83,7 +81,8 @@ export default function Products() {
     }
     
     try {
-      const res = await useOrderProduct(user.token, user.email, sareeId);
+      const res = await useOrderProduct(user.token, user.id, sareeId);
+      console.log("order:",res)
       if (res.success) {
         updateUser({ ...user, orderStatus: true }, user.token);
         toast({ title: "Success", description: "Saree purchased successfully" });

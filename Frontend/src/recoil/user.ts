@@ -2,7 +2,7 @@ import { atom, useRecoilState } from "recoil";
 
 interface User {
     id:string;
-    name: string;
+    Username: string;
     email: string;
     membershipStatus: boolean;
     orderStatus: boolean;

@@ -21,7 +21,7 @@ import {
 import { useForgetPassword } from '@/hooks/useForgetPassword'
 
 export interface LoginFormData {
-    email: string;
+    name: string;
     password: string;
 }
 
@@ -34,7 +34,7 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<LoginFormData>({
-        email: '',
+        name: '',
         password: '',
     })
 
@@ -51,7 +51,7 @@ export default function Login() {
 
 
     const onSubmit = async() => {
-        if(!formData.email || !formData.password){
+        if(!formData.name || !formData.password){
             toast({
                 title: "Failed to Loged In",
                 description: "Please fill all the fields",
@@ -122,15 +122,15 @@ export default function Login() {
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
                     <CardDescription className="text-center">
-                        to continue to mlm
+                        to continue to JD Lifestyle
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">
                     <div >
                         <div className="grid gap-2">
                             <div className="grid gap-1">
-                                <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" placeholder="m@example.com" type="email" value={formData.email} onChange={handleChange} />
+                                <Label htmlFor="name">Username</Label>
+                                <Input id="name" name="name" placeholder="Jhon Doe" type="text" value={formData.name} onChange={handleChange} />
                             </div>
                             <div className="grid gap-1 ">
                                 <Label htmlFor="password">Password</Label>
