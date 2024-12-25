@@ -12,6 +12,7 @@ import { useUserState } from '@/recoil/user'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useCheckUserName } from '@/hooks/useCheckUserName'
+import { useSendOtp, useVerifyOtp } from '@/hooks/useForgetPassword'
 
 interface Address {
   houseNo: string;
@@ -48,7 +49,8 @@ export default function Register() {
   const [showOTPDialog, setShowOTPDialog] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isUserNameAvailable, setIsUserNameAvailable] = useState(false);
-  // const [isOTPSend, setIsOtpSend] = useState(false);
+  const [isOTPSend, setIsOtpSend] = useState(false);
+  const [timer, setTimer] = useState<number>(0);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState<RegisterFormData>({
     fullName:'',
@@ -99,6 +101,16 @@ export default function Register() {
     };
   }, [formData.userName]);
 
+  useEffect(() => {
+    if (timer > 0) {
+      const timer = setInterval(() => {
+        setTimer((prev: number) => prev - 1); // Decrease the timer by 1 second
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [timer])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name.includes("address.") || name.includes("bankDetails.")) {
@@ -119,7 +131,7 @@ export default function Register() {
   };
 
   const onSubmit = async () => {
-    if(!isUserNameAvailable){
+    if (!isUserNameAvailable) {
       toast({
         title: "Failed to Create Account!",
         description: "Username is not available",
@@ -151,8 +163,19 @@ export default function Register() {
       })
       return;
     }
-    setShowOTPDialog(true)
-    //send otp
+    setIsOtpSend(true)
+    const res = await useSendOtp(formData.email);
+    if (res?.success) {
+      setTimer(res.timeLeft)
+      setShowOTPDialog(true)
+    } else {
+      toast({
+        title: "Failed to Create Account!",
+        description: res.message,
+        variant: "destructive",
+      });
+    }
+    setIsOtpSend(false)
   }
 
   const handleVerifyOTP = async (value: string) => {
@@ -160,21 +183,28 @@ export default function Register() {
 
     try {
       setIsLoading(true)
-      // Here you would typically verify the OTP with your backend
-
-      const responce = await useCreateAccount(formData);
-      if (responce.status) {
-        updateUser(responce.data.user, responce.data.token);
-        toast({
-          title: "Account Created!",
-          description: "Your account has been successfully Created.",
-        });
-        setShowOTPDialog(false);
-        navigate('/');
+      setShowOTPDialog(false);
+      const res = await useVerifyOtp(formData.email, value);
+      if (res?.success) {
+        const responce = await useCreateAccount(formData);
+        if (responce.status) {
+          updateUser(responce.data.user, responce.data.token);
+          toast({
+            title: "Account Created!",
+            description: "Your account has been successfully Created.",
+          });
+          navigate('/');
+        } else {
+          toast({
+            title: "Failed to Create Account!",
+            description: responce.message,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
-          title: "Failed to Create Account!",
-          description: responce.message,
+          title: "Verification Failed",
+          description: "Invalid OTP.Please try again",
           variant: "destructive",
         });
       }
@@ -192,14 +222,31 @@ export default function Register() {
     return null
   }
 
+  if(isLoading){
+    return(
+      <div className="flex items-center justify-center h-screen">
+        <LoaderCircle className="animate-spin" size={80}/>
+      </div>
+    )
+  } 
+
   return (
     <>
-      <div className="max-h-screen flex items-start justify-center px-4 py-12 sm:px-6 lg:px-8"> {/*  bg-gray-100 */}
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
-            <CardDescription className="text-center">
-              to continue to JD Lifestyle
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md border-0 shadow-lg">
+          <CardHeader className="space-y-2 pb-6">
+            <div className="mx-auto w-20 h-20 relative mb-4">
+              <img
+                src="/logoJDLifestyle.jpeg"
+                alt="JD Lifestyle Logo"
+                className="object-contain"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">
+              Sign Up
+            </CardTitle>
+            <CardDescription className="text-center text-base">
+              Welcome to JD Lifestyle
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -273,8 +320,8 @@ export default function Register() {
                   <Input id="ifscCode" name="bankDetails.ifscCode" placeholder="IFSC Code" type="text" value={formData.bankDetails.ifscCode} disabled={isLoading} onChange={handleChange} />
                   <Input id="bankName" name="bankDetails.bankName" placeholder="Bank Name" type="text" value={formData.bankDetails.bankName} disabled={isLoading} onChange={handleChange} />
                 </div>
-                <Button type="submit" disabled={isLoading} onClick={onSubmit} className='hover:bg-blue-500'>
-                  {isLoading ? <LoaderCircle className="animate-spin" /> : "Sign Up"}
+                <Button type="submit" disabled={isOTPSend} onClick={onSubmit} className='hover:bg-blue-500'>
+                  {isOTPSend? <LoaderCircle className="animate-spin" /> : "Sign Up"}
                 </Button>
               </div>
             </div>
@@ -292,14 +339,15 @@ export default function Register() {
           </CardFooter>
         </Card>
       </div>
-      <OtpDialog 
-      showOTPDialog={showOTPDialog}
-      isLoading={isLoading}
-      setShowOTPDialog={setShowOTPDialog}
-      handleVerifyOTP={handleVerifyOTP}
-      onSubmit={onSubmit}
-      email={formData.email}
-      />
+        <OtpDialog 
+          showOTPDialog={showOTPDialog}
+          isLoading={isLoading}
+          setShowOTPDialog={setShowOTPDialog}
+          handleVerifyOTP={handleVerifyOTP}
+          onSubmit={onSubmit}
+          email={formData.email}
+          timer={timer}
+        />
     </>
   )
 }
@@ -311,6 +359,7 @@ interface OtpDialopProps{
   handleVerifyOTP:(value:string)=>void,
   onSubmit:()=>void,
   email:string
+  timer:number
 }
 
 
@@ -321,17 +370,24 @@ export function OtpDialog(
     setShowOTPDialog,
     handleVerifyOTP,
     onSubmit,
-    email
+    email,
+    timer
 
   }:OtpDialopProps
 ){
   return(
     <Dialog open={showOTPDialog} onOpenChange={!isLoading ? setShowOTPDialog : () => { }}>
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-lg">
       <DialogHeader className="text-center space-y-3">
         <DialogTitle className="text-2xl font-bold">Verify Email</DialogTitle>
-        <DialogDescription className="text-base">
-          Please enter the verification code sent to {email}
+        <DialogDescription className="text-lg ">
+          Please enter the verification code sent to 
+          <span className='ml-2 text-green-400'>
+            {email}
+          </span>
+        </DialogDescription>
+        <DialogDescription className="text-lg text-red-400">
+          Please check your spam folder if you don't see the email in your inbox
         </DialogDescription>
       </DialogHeader>
       <div className="flex flex-col items-center space-y-8 py-4">
@@ -363,12 +419,12 @@ export function OtpDialog(
             Didn't receive the code?
           </p>
           <Button
-            variant="ghost"
+            variant="outline"
             className="text-primary hover:text-primary/80 font-medium hover:bg-primary/5"
             onClick={onSubmit}
-            disabled={isLoading}
+            disabled={timer !== 0}
           >
-            Resend Code
+            {timer === 0 ? "Resend Code" : `Resend Code in ${timer}s`}
           </Button>
         </div>
       </div>

@@ -49,7 +49,6 @@ const MyTeam = () => {
     } else {
       const fetchUserData = async () => {
         const userData = await useUserTeamData(user.id, user.token);
-        console.log("userData",userData)
         if(userData && userData.success === false ){
           toast({
             title: "Failed to fetch user data",

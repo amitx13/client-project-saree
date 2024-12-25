@@ -8,7 +8,7 @@ import { EyeClosed, LoaderCircle } from 'lucide-react';
 import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast'
 import { useLogin } from '@/hooks/useLogin'
-import { useLogout, useUserState } from '@/recoil/user'
+import { useUserState } from '@/recoil/user'
 import {
     Dialog,
     DialogContent,
@@ -102,7 +102,7 @@ export default function Login() {
         if(!forgotPasswordEmail){
             toast({
                 title: "Failed to Send Reset Link",
-                description: "Please enter your email",
+                description: "Please enter your UserNaem or UserId",
                 variant: "destructive",
             })
             return
@@ -129,14 +129,23 @@ export default function Login() {
     }
 
     return (
-        <div className="max-h-screen flex items-start justify-center px-4 py-12 sm:px-6 lg:px-8"> {/*  bg-gray-100 */}
-            <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
-                    <CardDescription className="text-center">
-                        to continue to JD Lifestyle
-                    </CardDescription>
-                </CardHeader>
+        <div className="min-h-dvh fixed w-full -translate-y-8 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md border-0 shadow-lg">
+          <CardHeader className="space-y-2 pb-6">
+            <div className="mx-auto w-20 h-20 relative mb-4">
+              <img
+                src="/logoJDLifestyle.jpeg"
+                alt="JD Lifestyle Logo"
+                className="object-contain"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">
+              Sign In
+            </CardTitle>
+            <CardDescription className="text-center text-base">
+              Welcome to JD Lifestyle
+            </CardDescription>
+          </CardHeader>
                 <CardContent className="grid gap-4">
                     <div >
                         <div className="grid gap-2">
@@ -169,25 +178,25 @@ export default function Login() {
                             Sign up
                         </div>
                     </div>
-                    <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+                    <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen} >
                         <DialogTrigger asChild>
                             <Button variant="link" className="text-sm p-0">Forgot Password?</Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
+                        <DialogContent className="sm:max-w-[425px] rounded-md">
                             <DialogHeader>
                                 <DialogTitle>Forgot Password</DialogTitle>
                                 <DialogDescription>
-                                    Enter your email address and we'll send you a link to reset your password.
+                                    Enter your Username or UserId address and we'll send you a link to reset your password.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="forgotPasswordEmail" className="col-span-4">
-                                        Email
+                                        UserName/UserID
                                     </Label>
                                     <Input
                                         id="forgotPasswordEmail"
-                                        placeholder="example@email.com"
+                                        placeholder="Enter Username or UserId"
                                         className="col-span-4"
                                         value={forgotPasswordEmail}
                                         onChange={(e) => setForgotPasswordEmail(e.target.value)}
@@ -206,3 +215,5 @@ export default function Login() {
         </div>
     )
 }
+
+

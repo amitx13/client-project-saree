@@ -82,7 +82,6 @@ export default function Products() {
     
     try {
       const res = await useOrderProduct(user.token, user.id, sareeId);
-      console.log("order:",res)
       if (res.success) {
         updateUser({ ...user, orderStatus: true }, user.token);
         toast({ title: "Success", description: "Saree purchased successfully" });

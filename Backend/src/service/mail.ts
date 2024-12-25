@@ -1,21 +1,140 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    host: "in-v3.mailjet.com",
+    host: 'jdlifestyle.store',
     port: 587,
+    secure: false,
     auth: {
-      user: process.env.MJ_APIKEY_PUBLIC as string, 
-      pass: process.env.MJ_APIKEY_PRIVATE as string,
+        user: 'JDlifestyle',
+        pass: 'JDlifestyle_smtp_password'
     },
-  });
-  
-  export const sendPasswordResetEmail = async (
-    email: string,
-    resetLink: string
-): Promise<boolean> => {
+    tls: {
+        rejectUnauthorized: false // self-signed certificate
+    }
+});
+
+export const sendOTPEmail = async(email: string, otp: string ):Promise<boolean> => {
     try {
         const info = await transporter.sendMail({
-            from: '"mlmSaree" <amitkvs981@gmail.com>',
+            from: "JDlifestyle <no-reply@jdlifestyle.store>",
+            to: email,
+            subject: "Your One-Time Code is:",
+            html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your One-Time Code</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #ddffe7;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+        .otp-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #ffffff;
+            border: 2px solid #000;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #000;
+            font-size: 25px;
+            font-weight: bold;
+        }
+        .footer {
+            padding: 20px;
+            background-color: #f8f9fa;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+            }
+            .otp-button {
+                font-size: 20px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table role="presentation" class="container">
+        <tr>
+            <td class="header">
+                <h1>JD Lifestyle</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <h2>Your one-time code is:</h2>
+                <a href="#" class="otp-button">${otp}</a>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+                <p>© 2023 JDlifestyle. All rights reserved.<br />
+                If you have any questions, contact our <a href="#">Website Guides</a>.<br />
+                Or, visit our <a href="#">Help Center</a>.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`
+        });
+
+        if(info.accepted.includes(email)){
+            return true;
+        }
+        return false;
+
+    } catch (error) {
+        console.error('Error sending OTP email:', error);
+        return false
+    }
+}
+
+
+
+export const sendPasswordResetEmail = async (
+    email: string,
+    resetLink: string
+):Promise<boolean> => {
+    try {
+        const info = await transporter.sendMail({
+            from: "JDlifestyle <no-reply@jdlifestyle.store>",
             to: email,
             subject: "Password Reset Request",
             text: `To reset your password, please click the following link: ${resetLink} . The link will expire in 1 hour.`,
@@ -34,7 +153,7 @@ const transporter = nodemailer.createTransport({
                                 <!-- Header -->
                                 <tr>
                                     <td style="padding: 40px 30px; text-align: center; background-color: #8B0000;">
-                                        <h1 style="color: #ffffff; font-size: 28px; margin: 0;">mlmSaree</h1>
+                                        <h1 style="color: #ffffff; font-size: 28px; margin: 0;">JD Lifestyle</h1>
                                     </td>
                                 </tr>
                                 <!-- Content -->
@@ -58,7 +177,7 @@ const transporter = nodemailer.createTransport({
                                 <!-- Footer -->
                                 <tr>
                                     <td style="padding: 30px; text-align: center; background-color: #f8f8f8; color: #999999; font-size: 14px;">
-                                        <p style="margin: 0;">© 2023 mlmSaree. All rights reserved.</p>
+                                        <p style="margin: 0;">© 2024 JD Lifestyle. All rights reserved.</p>
                                         <p style="margin: 10px 0 0;">If you have any questions, please contact our support team.</p>
                                     </td>
                                 </tr>
@@ -73,7 +192,7 @@ const transporter = nodemailer.createTransport({
         if(info.accepted.includes(email)){
             return true;
         }
-        return false
+        return false;
 
     } catch (error) {
         console.error("Error sending password reset email:", error);

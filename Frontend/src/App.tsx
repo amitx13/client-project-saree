@@ -16,6 +16,7 @@ import useAuthInterceptor from "./hooks/useAuthInterceptor"
 import { ResetPassword } from "./components/appComponents/ResetPassword"
 import Profile from "./components/appComponents/Profile"
 import Homepage from "./components/appComponents/Homepage"
+import BackgroundLogo from "./components/appComponents/BackgroundLogo"
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <BackgroundLogo>
       <Navbar />
       <Toaster />
       <Routes>
@@ -41,6 +43,7 @@ function App() {
         <Route path={RouteSList.Profile} element={<Profile/>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </BackgroundLogo>
     </ThemeProvider>
   )
 }

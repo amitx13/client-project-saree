@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom'
 import { useProfileData } from '@/hooks/useProfile'
 import { useUpdateUserData } from '@/hooks/useUpdateUserData'
 import { OtpDialog } from './Register'
+import { useSendOtp, useVerifyOtp } from '@/hooks/useForgetPassword'
 
 interface Address {
   id: string;
@@ -46,7 +47,7 @@ export interface ProfileFormProps {
 }
 
 export default function Profile() {
-  const [user] = useUserState()
+  const [user,] = useUserState()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -57,11 +58,10 @@ export default function Profile() {
 
   const [showOTPDialog, setShowOTPDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [timer, setTimer] = useState<number>(0);
 
   const fetchUserData = async () => {
     const userData = await useProfileData(user.id, user.token)
-    console.log("userData", userData.userData)
     if (userData && userData.success === false) {
       toast({
         title: "Error",
@@ -84,6 +84,16 @@ export default function Profile() {
     }
     fetchUserData()
   }, [])
+
+  useEffect(() => {
+    if (timer > 0) {
+      const timer = setInterval(() => {
+        setTimer((prev: number) => prev - 1); // Decrease the timer by 1 second
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [timer])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -120,20 +130,39 @@ export default function Profile() {
   const handleSubmit = async () => {
     if(!userDetails) return
     setIsEditing(false)
+    setIsSubmitting(true)
 
     if(user.email !== userDetails.email){
-      setShowOTPDialog(true)
+        const res = await useSendOtp(userDetails.email);
+          if (res?.success) {
+            setTimer(res.timeLeft)
+            setShowOTPDialog(true)
+          } else {
+            toast({
+              title: "Failed to Update Account Details!",
+              description: "Email cannot be changed right now, please try again after sometime",
+              variant: "destructive",
+            });
+          }
+          setIsSubmitting(false)
+        return
     }
 
-
-
-
-    setIsSubmitting(true)
-    console.log("Submitting form...", userDetails)
     const changes = await useUpdateUserData(user.id, userDetails, user.token)
-    console.log("Changes", changes)
+    if(changes.success) {
+      fetchUserData()
+      toast({
+        title: "Account Updated Sucessfully!",
+        description: "Your account has been updated successfully.",
+      });
+    } else {
+      toast({
+        title: "Failed to Update Account Details!",
+        description: changes.message,
+        variant: "destructive",
+      });
+    }
     setIsSubmitting(false)
-    fetchUserData()
   }
 
 
@@ -162,11 +191,68 @@ export default function Profile() {
   )
 
   const handleVerifyOTP = async (otp:string) => {
-    setIsLoading(true)
-    console.log("OTP", otp)
-    setIsLoading(false)
-  //loading
+    if(!userDetails) {
+      toast({
+        title: "Error",
+        description: "User details not found",
+        variant: "destructive",
+      })
+      return
+    }
+    if(otp.length !== 4) {
+      toast({
+        title: "Invalid OTP",
+        description: "OTP should be 4 digits",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+          setShowOTPDialog(false);
+          setIsLoading(true)
+          const res = await useVerifyOtp(userDetails.email, otp);
+          if (res?.success) {
+            const responce = await  useUpdateUserData(user.id, userDetails, user.token)
+            if (responce.success) {
+              toast({
+                title: "Account Updated Sucessfully!",
+                description: "Your account has been updated successfully.",
+              });
+            } else {
+              toast({
+                title: "Failed to Update User Details",
+                description: responce.message,
+                variant: "destructive",
+              });
+            }
+          } else {
+            toast({
+              title: "Verification Failed",
+              description: "Invalid OTP.Please try again",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Verification Failed",
+            description: "Please try again",
+            variant: "destructive",
+          });
+        }
+        finally {
+          fetchUserData()
+          setIsLoading(false);
+        }
   }
+
+
+  if(isSubmitting || isLoading){
+    return(
+      <div className="flex items-center justify-center h-screen">
+        <LoaderCircle className="animate-spin" size={80}/>
+      </div>
+    )
+  } 
 
   return (
     <div className="min-h-screen flex pt-4 justify-center bg-gradient-to-b from-background to-background/80">
@@ -380,17 +466,8 @@ export default function Profile() {
               disabled={isSubmitting}
               onClick={handleSubmit}
             >
-              {isSubmitting ? (
-                <>
-                  <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
                   <SaveIcon className="mr-2 h-5 w-5" />
                   Save Changes
-                </>
-              )}
             </Button>
           </div>
         )}
@@ -402,8 +479,8 @@ export default function Profile() {
       handleVerifyOTP={handleVerifyOTP}
       onSubmit={handleSubmit}
       email={userDetails.email}
+      timer={timer}
       />
     </div>
   )
 }
-

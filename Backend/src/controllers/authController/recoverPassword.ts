@@ -10,17 +10,22 @@ const generateResetToken = (): string => {
 };
 
 export const recoverPassword = async (req: Request, res: Response) => {
-    const { userName } = req.body;
+    const { userNameorId } = req.body;
 
-    if (!userName) {
-        res.status(400).json({ success:false, message: "Email is required." });
+    if (!userNameorId) {
+        res.status(400).json({ success:false, message: "Email or UserId is required." });
         return;
     }
 
     try {
 
-        const user = await prisma.user.findUnique({
-            where: { Username:userName },
+        const user = await prisma.user.findFirst({
+            where: { 
+                OR: [
+                    { Username: userNameorId },
+                    { id: userNameorId }
+                ]
+             },
         });
         
         if (!user) {
@@ -30,6 +35,9 @@ export const recoverPassword = async (req: Request, res: Response) => {
 
         const resetToken = generateResetToken();
 
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const status = await sendPasswordResetEmail(user.email, resetLink);
+
         await prisma.passwordResetToken.create({
           data: {
             userId: user.id,
@@ -37,9 +45,6 @@ export const recoverPassword = async (req: Request, res: Response) => {
             expiresAt: new Date(Date.now() + 3600000),
           },
         });
-
-        const resetLink = `${process.env.FRONTEND_URL}reset-password?token=${resetToken}`;
-        const status = await sendPasswordResetEmail(user.email, resetLink);
 
         if (!status) {
             res.status(500).json({ success:false, message: "Error sending password reset email. Try after sometime." });

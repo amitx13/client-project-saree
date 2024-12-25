@@ -83,11 +83,15 @@ export const getUserTeamData = async (req:Request, res:Response) => {
         }
 
         const referrals = await prisma.user.findMany({
-            where: { referrerId: id },
+            where: { 
+                referrerId: id,
+                membershipStatus:true
+             },
         })
 
         const referralsData = referrals.map(referral => ({
-            name: referral.Username, // to be updated when real name will be added 
+            
+            name: referral.fullName,
             mobile: referral.mobile
         }));
 
@@ -98,7 +102,7 @@ export const getUserTeamData = async (req:Request, res:Response) => {
 
             if (sponsored) {
                 const sponsoredData = {
-                    name: sponsored.Username, // to be updated when real name will be added
+                    name: sponsored.fullName,
                     email: sponsored.email,
                     phone: sponsored.mobile
                 }

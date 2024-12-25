@@ -48,7 +48,6 @@ export default function Dashboard() {
     } else {
       const fetchUserData = async () => {
         const data = await useUserData(user.id, user.token);
-        console.log("user data", data)
         if(data && data.success === false ){
           toast({
             title: "Failed to fetch user data",
@@ -185,7 +184,7 @@ export default function Dashboard() {
               </Button>
             </div>
             <CardDescription>Total Reward earned through referral</CardDescription>
-            <p className="text-2xl font-bold">₹{userData?.levelIncome || 0} earned</p>  {/* todo */}
+            <p className="text-2xl font-bold">₹{userData?.levelIncome || 0} earned</p>
           </CardContent>
         </Card>}
 
@@ -230,7 +229,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold text-center">
-              ₹{userData?.walletBalance || 0 } {/* todo */}
+              ₹{userData?.walletBalance || 0 } 
             </p>
           </CardContent>
         </Card>
@@ -238,5 +237,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
-// api call to check for referal earnings
