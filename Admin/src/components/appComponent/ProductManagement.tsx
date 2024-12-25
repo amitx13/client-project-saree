@@ -140,7 +140,6 @@ export default function ProductManagementPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     if (e.target.files && e.target.files[0]) {
-      console.log(e.target.files[0])
       setNewProduct({ ...newProduct, image: e.target.files[0] });
     }
     const file = e.target.files?.[0]

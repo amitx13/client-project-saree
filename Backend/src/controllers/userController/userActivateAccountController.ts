@@ -18,8 +18,6 @@ export const referalChain = async (referrerId: string,MAX_LEVEL=6) => {
         select: { referrerId: true }
       })
 
-      console.log("called")
-
       if (!parentUser?.referrerId) break
       
       referralChain.push(parentUser.referrerId)

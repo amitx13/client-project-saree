@@ -33,18 +33,3 @@ const useAuthInterceptor = () => {
 };
 
 export default useAuthInterceptor;
-
-
-/* interfceptors are used to intercept the request and response before they are handled by then or catch.
-    api.interceptors.response.use(response => {
-      console.log('Response status:', response.status);
-      return response;
-    }, error => {
-      if (error.response) {
-        console.log('Error status:', error.response.status);
-      }
-      return Promise.reject(error);
-    });
-    
-
-*/

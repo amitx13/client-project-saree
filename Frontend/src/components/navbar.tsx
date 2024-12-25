@@ -33,7 +33,6 @@ interface AvatarProps {
 }
 
 function AvatarDemo({ name, membershipStatus, onClick }: AvatarProps) {
-    console.log(name, membershipStatus);
     const FirstAndLastLetter = name && name.split(" ").map((n) => n[0]).join("");
     
     return (
