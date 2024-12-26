@@ -170,7 +170,7 @@ export default function RewardsPage() {
 
 
 export function LevelCountTable({levels,userId}: {levels:LevelCountProps,userId:string}) {
-  const levelCounts = Object.entries(levels).map(([key, value], index) => {
+  const levelCounts = Object.entries(levels).map(([_, value], index) => {
     return { index:index+1, value };
   });
 

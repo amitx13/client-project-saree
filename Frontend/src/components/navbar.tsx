@@ -95,7 +95,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-3 hover:opacity-80">
                         <Avatar className="h-9 w-9">
-                            <AvatarImage src="/logoJDLifestyle.jpeg" alt="JD Lifestyle" />
+                            <AvatarImage src="/logoJDLifestyle.svg" alt="JD Lifestyle" />
                             <AvatarFallback>JD</AvatarFallback>
                         </Avatar>
                         <span className="font-semibold">JD Lifestyle</span>
