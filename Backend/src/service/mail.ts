@@ -1,22 +1,20 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    host: 'jdlifestyle.store',
+    host: 'host.docker.internal',
     port: 587,
     secure: false,
-    auth: {
-        user: 'JDlifestyle',
-        pass: 'JDlifestyle_smtp_password'
-    },
     tls: {
-        rejectUnauthorized: false // self-signed certificate
-    }
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+    },
+    ignoreTLS: true
 });
 
 export const sendOTPEmail = async(email: string, otp: string ):Promise<boolean> => {
     try {
         const info = await transporter.sendMail({
-            from: "JDlifestyle <no-reply@jdlifestyle.store>",
+            from: "JDlifestyle <no-reply@api.jdlifestyle.store>",
             to: email,
             subject: "Your One-Time Code is:",
             html: `<!DOCTYPE html>
@@ -134,7 +132,7 @@ export const sendPasswordResetEmail = async (
 ):Promise<boolean> => {
     try {
         const info = await transporter.sendMail({
-            from: "JDlifestyle <no-reply@jdlifestyle.store>",
+            from: "JDlifestyle <no-reply@api.jdlifestyle.store>",
             to: email,
             subject: "Password Reset Request",
             text: `To reset your password, please click the following link: ${resetLink} . The link will expire in 1 hour.`,

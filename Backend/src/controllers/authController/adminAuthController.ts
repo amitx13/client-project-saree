@@ -35,9 +35,9 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        let AdminId: string|null = await generateUserId();
+        let AdminId: string|undefined = await generateUserId();
 
-        if(!AdminId){
+        if(AdminId === undefined){
             AdminId = Math.random().toString(36).substr(2, 9);
         }
 

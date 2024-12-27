@@ -51,28 +51,30 @@ const generateNumbers = (digits: number): string => {
 };
 
 export async function generateUserId() {
-
-    let userId: string;
+    let userId:string;
     let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
+    const batchSize = 10; // Increased batch size for better efficiency
 
-    while (!isUnique && attempts < maxAttempts) {
-        userId = `JD${generateNumbers(5)}`;
+    while (!isUnique) {
+        // Generate a larger batch of IDs
+        const userIds = Array.from({ length: batchSize }, () => `JD${generateNumbers(5)}`);
 
-        // Check if this ID already exists in the database
-        const existingUser = await prisma.user.findUnique({
-            where: { id: userId }
+        // Use a single database query with batching
+        const existingUsers = await prisma.$transaction(async (prisma) => {
+            return await prisma.user.findMany({
+                where: { id: { in: userIds } },
+                select: { id: true }
+            });
         });
 
-        if (!existingUser) {
+        const existingUserIds = new Set(existingUsers.map(user => user.id));
+        userId = userIds.find(id => !existingUserIds.has(id)) || '';
+
+        if (userId) {
             isUnique = true;
             return userId;
         }
-
-        attempts++;
     }
-    return null;
 }
 
 
@@ -119,9 +121,9 @@ export const registerUser = async (req: Request, res: Response) => {
         }
         const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS || "10"));
 
-        const userId: string | null = await generateUserId();
+        const userId = await generateUserId();
 
-        if (!userId) {
+        if (userId === undefined) {
             res.status(500).json({ message: "Error generating user ID. TryAgain" });
             return;
         }
