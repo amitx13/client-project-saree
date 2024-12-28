@@ -29,6 +29,8 @@ interface BankDetails{
 type Payout = {
   id: string;
   userName: string;
+  fullName: string;
+  userId: string;
   mobile: number,
   amount: number;
   status: 'PENDING' | 'COMPLETED' | 'REJECTED';
@@ -132,6 +134,7 @@ export default function UserPayoutManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[200px]">User</TableHead>
+                  <TableHead >ID</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
@@ -141,7 +144,8 @@ export default function UserPayoutManagement() {
               <TableBody>
                 {displayedPayouts.map((payout) => (
                   <TableRow key={payout.id}>
-                    <TableCell className="font-medium">{payout.userName}</TableCell>
+                    <TableCell className="font-medium">{payout.fullName}</TableCell>
+                    <TableCell className="font-medium">{payout.userId}</TableCell>
                     <TableCell>₹{payout.amount.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(payout.status.toLowerCase() as 'pending' | 'completed' | 'rejected')}</TableCell>
                     <TableCell>{new Date(payout.requestedAt).toLocaleString()}</TableCell>
@@ -171,14 +175,26 @@ export default function UserPayoutManagement() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[425px]">
                               <DialogHeader>
-                                <DialogTitle>User Bank Details</DialogTitle>
+                                <DialogTitle>Bank Details</DialogTitle>
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                   <Label htmlFor="email" className="text-right">
                                     Name
                                   </Label>
+                                  <div className="col-span-3">{payout.fullName}</div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="email" className="text-right">
+                                    UserName
+                                  </Label>
                                   <div className="col-span-3">{payout.userName}</div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="email" className="text-right">
+                                    UserId
+                                  </Label>
+                                  <div className="col-span-3">{payout.bankDetails[0].userId}</div>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                   <Label htmlFor="status" className="text-right">

@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, IndianRupee, Search} from "lucide-react"
+import { ChevronLeft, ChevronRight, IndianRupee, PencilIcon, Search} from "lucide-react"
 import { useFetchAllUsers } from "@/hooks/useFetchAllUsers"
 import { useUserState } from "@/recoil/user"
 import { useActivateUserAccount } from "@/hooks/useActivateUserAccount"
@@ -28,12 +28,14 @@ import { toast } from "@/hooks/use-toast"
 type Users = {
   id: string
   name: string
+  username:string
   email: string
   registrationDate: string
   status: boolean
   referrer: string
   referrals: { email: string, status: boolean }[]
   walletBalance: number
+  levelIncome: number
 }[]
 
 export default function UserManagement() {
@@ -46,10 +48,14 @@ export default function UserManagement() {
   const usersPerPage = 7
   const [currentReferalPage, setCurrentReferalPage] = useState(1)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  
+  const [isEditing, setIsEditing] = useState(false)
+
 
   const fetchData = async () => {
     const Data = await useFetchAllUsers(user.token)
     if (Data.success) {
+      console.log(Data.userData)
       setUsers(Data.userData)
     }
   }
@@ -63,7 +69,7 @@ export default function UserManagement() {
 
   const filteredUsers = (users || []).filter(
     (user) =>
-      (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.id.includes(searchTerm)||user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (showInactive ? !user.status : user.status)
   )
@@ -132,11 +138,12 @@ export default function UserManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>USerId</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Registration Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Sponsor</TableHead>
-                  <TableHead>Earnings</TableHead>
+                  <TableHead>Current Balance</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -149,6 +156,7 @@ export default function UserManagement() {
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">{user.id}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{new Date(user.registrationDate).toLocaleString()}</TableCell>
                       <TableCell>
@@ -181,17 +189,48 @@ export default function UserManagement() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[425px]">
                               <DialogHeader>
-                                <DialogTitle>{user.name}</DialogTitle>
-                                <DialogDescription>
-                                  User details and referral information
-                                </DialogDescription>
+                                <div className="relative flex items-center justify-center">
+                                  <DialogTitle>{user.name}</DialogTitle>
+                                    {isEditing ? (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="mr-2"
+                                        onClick={() => setIsEditing(false)}
+                                      >
+                                        <ChevronLeft className="h-5 w-5" />
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full"
+                                        onClick={() => setIsEditing(true)}
+                                      >
+                                        <PencilIcon className="h-5 w-5" />
+                                      </Button>
+                                    )}
+                                </div>
+                                  <DialogDescription className="flex justify-center items-center">User details and referral information</DialogDescription>
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="email" className="text-right">
-                                    Email
+                                  <Label htmlFor="USerId" className="text-right text-nowrap">
+                                    UserId
                                   </Label>
-                                  <div className="col-span-3">{user.email}</div>
+                                  <div className="col-span-3">{user.id}</div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="fullName" className="text-right text-nowrap">
+                                    Full Name
+                                  </Label>
+                                  <div className="col-span-3">{user.name}</div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="UserName" className="text-right text-nowrap">
+                                    UserName
+                                  </Label>
+                                  <div className="col-span-3">{user.username}</div>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                   <Label htmlFor="status" className="text-right">
@@ -207,16 +246,22 @@ export default function UserManagement() {
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="earnings" className="text-right">
-                                    Earnings
+                                  <Label htmlFor="wallet Balance" className="text-right">
+                                    Current Balance
                                   </Label>
                                   <div className="col-span-3 flex items-center"><IndianRupee scale={1} size={15} />{user.walletBalance}</div>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="earnings" className="text-right">
+                                  <Label htmlFor="level Income" className="text-right text-wrap">
+                                    Total Referal Income
+                                  </Label>
+                                  <div className="col-span-3 flex items-center"><IndianRupee scale={1} size={15} />{user.levelIncome}</div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="earnings" className="text-right text-nowrap">
                                     Referrals count
                                   </Label>
-                                  <div className="col-span-3 flex items-center">{user.referrals.length}</div>
+                                  <div className="ml-3 col-span-3 flex items-center">{user.referrals.length}</div>
                                 </div>
                               </div>
                               {user.referrals.length !== 0 ? <div className="mt-4">
@@ -224,6 +269,9 @@ export default function UserManagement() {
                                 {currentReferalUsers.map((referral) => (
                                   <div key={referral.email} className="py-1">
                                     <div className="flex justify-between">
+                                      <div className="items-center gap-2">
+                                        <div >{user.id}</div>
+                                      </div>
                                       <div>
                                         {referral.email}
                                       </div>

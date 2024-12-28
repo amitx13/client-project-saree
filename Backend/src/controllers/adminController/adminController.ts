@@ -223,15 +223,18 @@ export const getAllUsers = async (req: Request, res: Response) => {
         const userData = usersData.map(user => {
             return {
                 id: user.id,
-                name: user.Username, //To be changed to Name
+                name: user.fullName,
+                username: user.Username,
                 email: user.email,
                 registrationDate: user.createdAt,          
                 status: user.membershipStatus,
                 referrer: user.referrerId,
                 referrals: user.referrals.map(referral => ({
+                    userId: referral.id,
                     email: referral.email,
                     status: referral.membershipStatus
                 })),
+                levelIncome:user.levelIncome,
                 walletBalance: user.walletBalance,
             }
         })
@@ -305,7 +308,8 @@ export const getAllOrdersDetails = async (req: Request, res: Response) => {
         const ordersData = orders.map(order => {
             return {
                 id: order.id,
-                userName: order.user.Username,
+                userId: order.userId,
+                fullName: order.user.fullName,
                 sareeName: order.saree.name,
                 orderPlacedAt: order.createdAt,
                 price: order.saree.price,
@@ -335,6 +339,8 @@ export const getAllWithdrawalRequests = async (req: Request, res: Response) => {
         const data = requests.map(request => {
             return {
                 id: request.id,
+                userId: request.userId,
+                fullName: request.user.fullName,
                 userName: request.user.Username,
                 mobile: request.user.mobile,
                 amount: request.amount,
@@ -395,12 +401,13 @@ export const getDashboardData = async (req: Request, res: Response) => {
         const totalActiveUsersOrders = totalActiveUsers.reduce((acc, user) => acc + user.orders.length, 0);
         const Top5UserWithMostReferrals = users.sort((a, b) => b.referrals.length - a.referrals.length).slice(0, 5);
 
-        const Top5UserWithMostReferralsData = Top5UserWithMostReferrals.map(user => {
-            return {
-                name:user.Username,
-                referralsCount:user.referrals.length
-            }
-        })
+        const Top5UserWithMostReferralsData = Top5UserWithMostReferrals
+            .filter(user => user.membershipStatus)
+            .map(user => ({
+            name: user.fullName,
+            id: user.id,
+            referralsCount: user.referrals.length
+            }));
 
         const today = new Date();
         const startOfDay = new Date(today.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));

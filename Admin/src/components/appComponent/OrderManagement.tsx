@@ -21,7 +21,8 @@ import { useOrderDispatch } from "@/hooks/useOrderDispatch"
 
 type Order = {
   id: string
-  userName: string
+  userId: string
+  fullName: string
   sareeName: string
   orderPlacedAt: string
   price: number
@@ -73,7 +74,7 @@ export default function OrderManagement() {
   }
 
   const filteredOrders = (orders ?? []).filter(order =>
-    (order.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.userId.includes(searchTerm)||order.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.sareeName.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (showHistory ? order.status : !order.status)
   )
@@ -125,6 +126,7 @@ export default function OrderManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[150px]">Customer Name</TableHead>
+                  <TableHead className="w-[100px]">User Id</TableHead>
                   <TableHead className="w-[150px]">Saree Name</TableHead>
                   <TableHead className="w-[180px]">Order Placed At</TableHead>
                   <TableHead className="w-[100px]">Price</TableHead>
@@ -136,7 +138,8 @@ export default function OrderManagement() {
               <TableBody>
                 {currentOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.userName}</TableCell>
+                    <TableCell className="font-medium">{order.fullName}</TableCell>
+                    <TableCell className="font-medium">{order.userId}</TableCell>
                     <TableCell>{order.sareeName}</TableCell>
                     <TableCell>{new Date(order.orderPlacedAt).toLocaleString()}</TableCell>
                     <TableCell>₹{order.price.toFixed(2)}</TableCell>

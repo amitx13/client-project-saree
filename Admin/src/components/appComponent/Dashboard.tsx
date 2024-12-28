@@ -1,28 +1,51 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { useUserState } from "@/recoil/user"
 import { useDashboardData } from "@/hooks/useDashboardData"
 import { useEffect, useState } from "react"
-import { Users, ShoppingCart } from "lucide-react"
+import { Users, ShoppingCart, Users2 } from 'lucide-react'
+import { useNavigate } from "react-router-dom"
 
 interface DashboardData {
-  totalUsers: number;
-  totalActiveUsers: number;
-  totalActiveUsersOrders: number;
+  totalUsers: number
+  totalActiveUsers: number
+  totalActiveUsersOrders: number
   Top5UserWithMostReferralsData: {
-    name: string;
-    referralsCount: number;
-  }[];
+    name: string
+    id: string
+    referralsCount: number
+  }[]
   todayActivity: {
-    newUsers: number;
-    pendingOrders: number;
-  };
+    newUsers: number
+    pendingOrders: number
+  }
 }
 
-
+function ActivityItem({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+  color: string
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-white/60 p-4 backdrop-blur-sm transition-transform duration-300 hover:scale-105 dark:bg-black/60">
+      <div className="flex items-center gap-3">
+        <Icon className={`h-5 w-5 ${color}`} />
+        <p className="font-medium text-gray-700 dark:text-gray-200">{label}</p>
+      </div>
+      <span className={`text-lg font-bold ${color}`}>{value}</span>
+    </div>
+  )
+}
 
 export default function AdminDashboard() {
   const [user] = useUserState()
+  const navigate = useNavigate()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
 
   const fetchDashboardData = async () => {
@@ -36,137 +59,115 @@ export default function AdminDashboard() {
     fetchDashboardData()
   }, [])
 
-  function ActivityItem({ icon: Icon, label, value, color }: { icon: React.ComponentType<{ className?: string }>, label: string, value: number, color: string }) {
-    return (
-      <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-black/60 rounded-lg backdrop-blur-sm transition-transform duration-300 hover:scale-105">
-        <div className="flex items-center space-x-3">
-          <Icon className={`h-6 w-6 ${color}`} />
-          <p className="font-medium text-gray-700 dark:text-gray-200">{label}</p>
-        </div>
-        <span className={`text-lg font-bold ${color}`}>{value}</span>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 flex-1 space-y-4 p-5">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-      </div>
-      <Tabs defaultValue="overview" className="space-y-4 ">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="flex min-h-screen  w-full items-center justify-center bg-gradient-to-br from-pink-100 to-blue-100 p-4 md:p-6">
+      <div className="w-full max-w-screen-xl lg:-translate-y-20">
+        <div className="rounded-xl bg-white/30 p-6 backdrop-blur-sm">
+          <Tabs defaultValue="overview" className="space-y-8">
+            <TabsContent value="overview" className="space-y-8">
+              {/* Stats Cards */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card className="cursor-pointer bg-gradient-to-br from-pink-500 to-orange-400 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                    <CardTitle className="text-sm font-medium text-white">Total Users</CardTitle>
+                    <Users2 className="h-4 w-4 text-white" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white">{dashboardData?.totalUsers || 0}</div>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gradient-to-br from-pink-500 to-orange-400">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Users</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-white"
+                <Card
+                  className="cursor-pointer bg-gradient-to-br from-cyan-500 to-blue-500 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+                  onClick={() => navigate("/users")}
                 >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{dashboardData?.totalUsers}</div>
-              </CardContent>
-            </Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                    <CardTitle className="text-sm font-medium text-white">Total Active Users</CardTitle>
+                    <Users className="h-4 w-4 text-white" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white">{dashboardData?.totalActiveUsers || 0}</div>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gradient-to-br from-cyan-500 to-blue-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Active Users</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-white"
+                <Card
+                  className="cursor-pointer bg-gradient-to-br from-green-400 to-emerald-500 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+                  onClick={() => navigate("/orders")}
                 >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{dashboardData?.totalActiveUsers}</div>
-              </CardContent>
-            </Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                    <CardTitle className="text-sm font-medium text-white">Total Orders</CardTitle>
+                    <ShoppingCart className="h-4 w-4 text-white" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white">{dashboardData?.totalActiveUsersOrders || 0}</div>
+                  </CardContent>
+                </Card>
+              </div>
 
-            <Card className="bg-gradient-to-br from-green-400 to-emerald-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Orders</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-white"
-                >
-                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                  <path d="M2 10h20" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{dashboardData?.totalActiveUsersOrders}</div>
-              </CardContent>
-            </Card>
-
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          {dashboardData && <Card className="col-span-4 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 transition-all duration-300 hover:shadow-lg">
-              <CardHeader className="bg-white/40 dark:bg-black/40 backdrop-blur-sm">
-                <CardTitle className="text-2xl font-bold dark:text-blue-300">User Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <ActivityItem icon={Users} label="New Users" value={dashboardData?.todayActivity.newUsers} color="text-green-500" />
-                  <ActivityItem icon={ShoppingCart} label="Pending Orders" value={dashboardData?.todayActivity.pendingOrders} color="text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>}
-            
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Top Referrers</CardTitle>
-                <CardDescription>Top 5 users with most referrals</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {dashboardData?.Top5UserWithMostReferralsData.map((user, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-[50%] text-sm font-medium">{user.name}</div>
-                      <div className="w-[30%] bg-slate-100 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{ width: `${( user.referralsCount/ 100) * 100}%` }}
-                        ></div>
+              {/* Activity and Referrals Section */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-8">
+                {dashboardData && (
+                  <Card className="col-span-4 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 transition-all duration-300 hover:shadow-xl dark:from-blue-900 dark:to-purple-900">
+                    <CardHeader className="bg-white/40 backdrop-blur-sm dark:bg-black/40">
+                      <CardTitle className="text-xl font-bold dark:text-blue-300">User Activity</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <ActivityItem
+                          icon={Users}
+                          label="Users Joined Today"
+                          value={dashboardData?.todayActivity.newUsers}
+                          color="text-green-500"
+                        />
+                        <ActivityItem
+                          icon={ShoppingCart}
+                          label="Current Pending Orders"
+                          value={dashboardData?.todayActivity.pendingOrders}
+                          color="text-orange-500"
+                        />
                       </div>
-                      <div className="w-[20%] text-right text-sm text-muted-foreground">
-                        {user.referralsCount}
-                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card className="col-span-4 transition-all duration-300 hover:shadow-xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl">Top Referrers</CardTitle>
+                    <CardDescription>Top 5 users with most referrals</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-5">
+                      {dashboardData?.Top5UserWithMostReferralsData.map((user, index) => (
+                        <div 
+                          key={index} 
+                          className="group flex flex-col gap-2 rounded-lg p-2 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-4"
+                        >
+                          <div className="flex min-w-[180px] flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                            <div className="font-medium">{user?.name}</div>
+                            <div className="text-sm text-muted-foreground">{user?.id}</div>
+                          </div>
+                          <div className="flex flex-1 items-center gap-3">
+                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                              <div
+                                className="h-2 rounded-full bg-primary transition-all duration-500 group-hover:opacity-80"
+                                style={{ width: `${(user?.referralsCount / 100) * 100}%` }}
+                              />
+                            </div>
+                            <div className="min-w-[3rem] text-right text-sm font-medium text-muted-foreground">
+                              {user?.referralsCount}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
+
