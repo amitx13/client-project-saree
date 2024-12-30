@@ -56,6 +56,10 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    if(!user){
+      navigate("/login")
+      return
+    }
     fetchDashboardData()
   }, [])
 

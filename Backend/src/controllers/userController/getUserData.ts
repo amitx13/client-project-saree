@@ -183,3 +183,52 @@ export const getUserRewardData = async (req:Request, res:Response) => {
         res.status(500).json({ success:false, message: "Something went wrong while getting user reward data." });
     }
 }
+
+export const getuserWelcomedata = async (req:Request, res:Response) => {
+    const { id } = req.params;
+
+    if (!id) {
+        res.status(400).json({ success:false, message: "userId is required." });
+        return
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id },
+        });
+
+        if (!user) {
+            res.status(404).json({ success:false, message: "User not found." });
+            return
+        }
+
+        const {membershipStatus,levelIncome,referrerId,orderStatus,role,walletBalance,  ...userData } = user;
+
+        if(user.referrerId){
+            const sponsored = await prisma.user.findUnique({
+            where: { id: user.referrerId },
+            })
+
+            if (sponsored) {
+                const sponsoredData = {
+                    sponsorId: sponsored.id,
+                    name: sponsored.fullName,
+                    email: sponsored.email,
+                    phone: sponsored.mobile
+                }
+
+                res.status(200).json({success:true, userData, sponsoredData });
+
+            } else {
+                res.status(200).json({success:true, userData});
+            }
+            return;
+        }
+
+        res.status(200).json({success:true, userData });
+
+    } catch (error) {
+        console.error("Error getting user data:", error);
+        res.status(500).json({ success:false, error: "Something went wrong while getting user data." });
+    }
+}

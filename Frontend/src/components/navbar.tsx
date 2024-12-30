@@ -40,10 +40,10 @@ function AvatarDemo({ name, membershipStatus, onClick }: AvatarProps) {
             <DropdownMenuTrigger asChild>
                 <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
                     <Avatar>
-                        <AvatarFallback>{FirstAndLastLetter || "UR"}</AvatarFallback>
+                        <AvatarFallback >{FirstAndLastLetter || "UR"}</AvatarFallback>
                     </Avatar>
                     <div className="md:block">
-                        <div className="font-medium text-sm">{name}</div>
+                        <div className="font-medium text-lg bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">{name}</div>
                         <div className={`text-xs ${membershipStatus ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                             {membershipStatus ? "Active" : "Inactive"}
                         </div>
@@ -98,7 +98,7 @@ const Navbar = () => {
                             <AvatarImage src="/logoJDLifestyle.jpeg" alt="JD Lifestyle" />
                             <AvatarFallback>JD</AvatarFallback>
                         </Avatar>
-                        <span className="font-semibold">JD Lifestyle</span>
+                        <span className="font-semibold bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">JD Lifestyle</span>
                     </Link>
 
                     {/* Desktop Navigation */}

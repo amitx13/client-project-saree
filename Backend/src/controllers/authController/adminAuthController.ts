@@ -29,11 +29,9 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
         })
 
         if (user) {
-            res.status(400).json({ message: "Admin already exists with this email." });
+            res.status(400).json({ message: "User/Admin already exists with this Username." });
             return;
         }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
 
         let AdminId: string|undefined = await generateUserId();
 
@@ -47,7 +45,7 @@ export const registerNewAdmin = async (req: Request, res: Response) => {
                 email,
                 fullName:name,
                 Username: name,
-                password: hashedPassword,
+                password: password,
                 role: 'ADMIN',
             },
         });
@@ -83,8 +81,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
             return;
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
+        if (user.password !== password) {
             res.status(401).json({ message: "Invalid password." });
             return;
         }

@@ -532,7 +532,7 @@ export default function Register() {
             title: "Account Created!",
             description: "Your account has been successfully Created.",
           });
-          navigate('/');
+          navigate(`/welcome_to_jd_lifestyle/${responce.data.user.id}`);
         } else {
           toast({
             title: "Failed to Create Account!",

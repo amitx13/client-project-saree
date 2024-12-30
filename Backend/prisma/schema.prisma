@@ -30,6 +30,7 @@ model User {
   levelRewards       LevelReward[]
   userRewards        UserReward[]
   withdrawalRequests WithdrawalRequest[]
+  activationCodes    ActivationCode[]
 }
 
 model OTP {
@@ -100,11 +101,12 @@ model WithdrawalRequest {
 }
 
 model ActivationCode {
-  id        String    @id @default(cuid())
-  code      String    @unique
-  isUsed    Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  expiresAt DateTime?
+  id          String    @id @default(cuid())
+  ownerUserID String    @default("JD00001")
+  user        User      @relation(fields: [ownerUserID], references: [id], onDelete: Cascade)
+  code        String    @unique
+  isUsed      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
 }
 
 model Reward {

@@ -13,34 +13,41 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, IndianRupee, PencilIcon, Search} from "lucide-react"
+import { ChevronLeft, ChevronRight, IndianRupee, PencilIcon, SaveIcon, Search } from "lucide-react"
 import { useFetchAllUsers } from "@/hooks/useFetchAllUsers"
 import { useUserState } from "@/recoil/user"
 import { useActivateUserAccount } from "@/hooks/useActivateUserAccount"
 import { toast } from "@/hooks/use-toast"
+import { useNavigate } from "react-router-dom"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Card, CardContent } from "../ui/card"
+import { useUpdateUserData } from "@/hooks/useUpdateUserData"
 
-type Users = {
+export type Users = {
   id: string
   name: string
-  username:string
+  username: string
+  password: string
   email: string
+  mobile: string
   registrationDate: string
   status: boolean
   referrer: string
-  referrals: { email: string, status: boolean }[]
+  referrals: { userId: string, email: string, status: boolean }[]
   walletBalance: number
   levelIncome: number
+  address: {id:string, houseNo: string, city: string, state: string, pinCode: string }
+  bankDetails: {id:string, accountNo: string, ifscCode: string, BankName: string }
 }[]
 
 export default function UserManagement() {
-
   const [user,] = useUserState()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
   const [users, setUsers] = useState<Users>()
   const [currentPage, setCurrentPage] = useState(1)
@@ -48,19 +55,23 @@ export default function UserManagement() {
   const usersPerPage = 7
   const [currentReferalPage, setCurrentReferalPage] = useState(1)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  
-  const [isEditing, setIsEditing] = useState(false)
 
+  const [isEditing, setIsEditing] = useState(false)
+  const [userDetails, setUserDetails] = useState<Users[0]>()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchData = async () => {
     const Data = await useFetchAllUsers(user.token)
     if (Data.success) {
-      console.log(Data.userData)
       setUsers(Data.userData)
     }
   }
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login")
+      return
+    }
     setIsLoading(true)
     fetchData()
     setIsLoading(false)
@@ -69,7 +80,7 @@ export default function UserManagement() {
 
   const filteredUsers = (users || []).filter(
     (user) =>
-      (user.id.includes(searchTerm)||user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.id.includes(searchTerm) || user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (showInactive ? !user.status : user.status)
   )
@@ -79,7 +90,7 @@ export default function UserManagement() {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser)
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
 
-  const handleActivateUserAccount = async(userId: string) => {
+  const handleActivateUserAccount = async (userId: string) => {
     setIsLoading(true)
     const res = await useActivateUserAccount(user.token, userId)
     if (res.success) {
@@ -97,6 +108,61 @@ export default function UserManagement() {
     }
     setIsLoading(false)
   }
+
+  const handleSubmit = async() => {
+    if(!userDetails) return
+    setIsSubmitting(true)
+    setIsEditing(false)
+    const changes = await useUpdateUserData(userDetails.id, userDetails, user.token)
+    if(changes.success) {
+      fetchData()
+      toast({
+        title: "Account Updated Sucessfully!",
+        description: "User account has been updated successfully.",
+      });
+    } else {
+      toast({
+        title: "Failed to Update Account Details!",
+        description: changes.message,
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false)
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserDetails((prevData) => {
+      if (!prevData) return prevData;
+
+      if (name.includes("address.")) {
+        const [, field] = name.split(".");
+        return {
+          ...prevData,
+          address: {
+            ...prevData.address,
+            [field]: value
+          }
+        };
+      }
+      
+      if (name.includes("bankDetails.")) {
+        const [, field] = name.split(".");
+        return {
+          ...prevData,
+          bankDetails: {
+            ...prevData.bankDetails,
+            [field]: value
+          }
+        };
+      }
+
+      return {
+        ...prevData,
+        [name]: value
+      };
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 p-4 sm:p-6 md:p-8">
@@ -139,6 +205,7 @@ export default function UserManagement() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>USerId</TableHead>
+                  <TableHead>Password</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Registration Date</TableHead>
                   <TableHead>Status</TableHead>
@@ -157,6 +224,7 @@ export default function UserManagement() {
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell className="font-medium">{user.id}</TableCell>
+                      <TableCell className="font-medium">{user.password}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{new Date(user.registrationDate).toLocaleString()}</TableCell>
                       <TableCell>
@@ -167,143 +235,320 @@ export default function UserManagement() {
                           {user.status ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{users && users.find((u) => u.id === user.referrer)?.email || "N/A"}</TableCell>
+                      <TableCell>{user && user?.referrer || "N/A"}</TableCell>
                       <TableCell className="pt-5 flex items-center"><IndianRupee scale={1} size={15} />{user.walletBalance}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          {!user.status ? 
-                          <Button
-                            disabled={isLoading}
-                            onClick={() => handleActivateUserAccount(user.id)}
-                            className="bg-green-500 hover:bg-green-600"
-                          >Activate</Button> 
-                          :
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                              >
-                                Details
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                              <DialogHeader>
-                                <div className="relative flex items-center justify-center">
-                                  <DialogTitle>{user.name}</DialogTitle>
-                                    {isEditing ? (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="mr-2"
-                                        onClick={() => setIsEditing(false)}
-                                      >
-                                        <ChevronLeft className="h-5 w-5" />
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-10 w-10 rounded-full"
-                                        onClick={() => setIsEditing(true)}
-                                      >
-                                        <PencilIcon className="h-5 w-5" />
-                                      </Button>
-                                    )}
-                                </div>
-                                  <DialogDescription className="flex justify-center items-center">User details and referral information</DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="USerId" className="text-right text-nowrap">
-                                    UserId
-                                  </Label>
-                                  <div className="col-span-3">{user.id}</div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="fullName" className="text-right text-nowrap">
-                                    Full Name
-                                  </Label>
-                                  <div className="col-span-3">{user.name}</div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="UserName" className="text-right text-nowrap">
-                                    UserName
-                                  </Label>
-                                  <div className="col-span-3">{user.username}</div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="status" className="text-right">
-                                    Status
-                                  </Label>
-                                  <div className="col-span-3">
-                                    <Badge
-                                      variant={user.status ? "default" : "destructive"}
-                                      className={user.status ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
-                                    >
-                                      {user.status ? "Active" : "Inactive"}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="wallet Balance" className="text-right">
-                                    Current Balance
-                                  </Label>
-                                  <div className="col-span-3 flex items-center"><IndianRupee scale={1} size={15} />{user.walletBalance}</div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="level Income" className="text-right text-wrap">
-                                    Total Referal Income
-                                  </Label>
-                                  <div className="col-span-3 flex items-center"><IndianRupee scale={1} size={15} />{user.levelIncome}</div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="earnings" className="text-right text-nowrap">
-                                    Referrals count
-                                  </Label>
-                                  <div className="ml-3 col-span-3 flex items-center">{user.referrals.length}</div>
-                                </div>
-                              </div>
-                              {user.referrals.length !== 0 ? <div className="mt-4">
-                                <h4 className="text-sm font-medium mb-2">Referrals</h4>
-                                {currentReferalUsers.map((referral) => (
-                                  <div key={referral.email} className="py-1">
-                                    <div className="flex justify-between">
-                                      <div className="items-center gap-2">
-                                        <div >{user.id}</div>
-                                      </div>
-                                      <div>
-                                        {referral.email}
-                                      </div>
-                                      <Badge
-                                        variant={referral.status ? "default" : "destructive"}
-                                        className={referral.status ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
-                                      >
-                                        {referral.status ? "Active" : "Inactive"}
-                                      </Badge>
+                          {!user.status ?
+                            <Button
+                              disabled={isLoading}
+                              onClick={() => handleActivateUserAccount(user.id)}
+                              className="bg-green-500 hover:bg-green-600"
+                            >Activate</Button>
+                            :
+                            (
+                              <Dialog onOpenChange={(isOpen) => {
+                                if(!isOpen) setIsEditing(false)
+                              }}>
+                                {/* Button to open the dialog */}
+                                <DialogTrigger asChild onClick={() => setUserDetails(user)}>
+                                  <Button variant="outline">View Details</Button>
+                                </DialogTrigger>
+
+                                {/* Dialog Content */}
+                                <DialogContent className="w-full lg:w-2/3">
+                                  <DialogHeader className="flex-row items-center justify-around">
+                                    <DialogTitle>User Details</DialogTitle>
+                                    <div className="h-12 w-12 flex items-center justify-center">
+                                      {isEditing && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="mr-2 w-auto p-2 rounded"
+                                          onClick={() => setIsEditing(false)}
+                                        >Back<ChevronLeft className="h-5 w-5" />
+                                        </Button>
+                                      )}
+                                      {!isEditing && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-10 w-auto p-2 rounded"
+                                          onClick={() => setIsEditing(true)}
+                                        >
+                                          Edit<PencilIcon className="h-5 w-5" />
+                                        </Button>
+                                      )}
                                     </div>
-                                  </div>
-                                ))}
-                                <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
-                                  <Button
-                                    onClick={() => setCurrentReferalPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentReferalPage === 1}
-                                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white w-full sm:w-auto"
-                                  >
-                                    <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-                                  </Button>
-                                  <span className="text-sm text-gray-600">Page {currentReferalPage} of {totalReferalPages}</span>
-                                  <Button
-                                    onClick={() => setCurrentReferalPage(prev => Math.min(prev + 1, totalReferalPages))}
-                                    disabled={currentReferalPage === totalReferalPages}
-                                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white w-full sm:w-auto"
-                                  >
-                                    Next <ChevronRight className="ml-2 h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>: null}
-                            </DialogContent>
-                          </Dialog>}
+                                  </DialogHeader>
+
+                                  {userDetails && <div>
+                                    <Tabs defaultValue="basic" className="w-full">
+                                      {/* Tabs List */}
+                                      <TabsList className="w-full justify-start rounded-none h-12 p-0 bg-transparent gap-6 mb-6">
+                                        {["basic", "address", "bank", "referals"].map((tab) => (
+                                          <TabsTrigger
+                                            key={tab}
+                                            value={tab}
+                                            className="relative h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0"
+                                          >
+                                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                          </TabsTrigger>
+                                        ))}
+                                      </TabsList>
+
+                                      {/* Basic Tab Content */}
+                                      <TabsContent value="basic" className="space-y-6 mt-0">
+                                        {/* User Info Inputs */}
+                                        <div className="space-y-4">
+                                          <div className="space-y-2">
+                                            <Label>User Id</Label>
+                                            <Input
+                                              name="id"
+                                              value={userDetails.id}
+                                              disabled={true}
+                                              className="h-12 text-lg bg-card"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Username</Label>
+                                            <Input
+                                              name="username"
+                                              value={userDetails.username}
+                                              disabled={true}
+                                              className={"h-12 text-lg bg-card"}
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Full Name</Label>
+                                            <Input
+                                              name="name"
+                                              value={userDetails.name}
+                                              onChange={handleChange}
+                                              disabled={!isEditing}
+                                              className="h-12 text-lg bg-card"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Email</Label>
+                                            <Input
+                                              name="email"
+                                              type="email"
+                                              value={userDetails.email}
+                                              onChange={handleChange}
+                                              disabled={!isEditing}
+                                              className="h-12 text-lg bg-card"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Password</Label>
+                                            <Input
+                                              name="password"
+                                              type="text"
+                                              value={userDetails.password}
+                                              onChange={handleChange}
+                                              disabled={!isEditing}
+                                              className="h-12 text-lg bg-card"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label>Mobile Number</Label>
+                                            <Input
+                                              name="mobile"
+                                              value={userDetails.mobile}
+                                              onChange={handleChange}
+                                              disabled={!isEditing}
+                                              className="h-12 text-lg bg-card"
+                                            />
+                                          </div>
+                                        </div>
+                                      </TabsContent>
+
+                                      {/* Address Tab Content */}
+                                      <TabsContent value="address">
+                                        <Card>
+                                          <CardContent className="p-6 space-y-4">
+                                            <div className="space-y-2">
+                                              <Label>House No / Street</Label>
+                                              <Input
+                                                name="address.houseNo"
+                                                value={userDetails.address.houseNo}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>City</Label>
+                                              <Input
+                                                name="address.city"
+                                                value={userDetails.address.city}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>State</Label>
+                                              <Input
+                                                name="address.state"
+                                                value={userDetails.address.state}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>Pin Code</Label>
+                                              <Input
+                                                name="address.pinCode"
+                                                value={userDetails.address.pinCode}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </TabsContent>
+
+                                      {/* Bank Tab Content */}
+                                      <TabsContent value="bank">
+                                        <Card>
+                                          <CardContent className="p-6 space-y-4">
+                                            <div className="space-y-2">
+                                              <Label>Account Number</Label>
+                                              <Input
+                                                name="bankDetails.accountNo"
+                                                value={userDetails.bankDetails.accountNo}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>IFSC Code</Label>
+                                              <Input
+                                                name="bankDetails.ifscCode"
+                                                value={userDetails.bankDetails.ifscCode}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label>Bank Name</Label>
+                                              <Input
+                                                name="bankDetails.BankName"
+                                                value={userDetails.bankDetails.BankName}
+                                                onChange={handleChange}
+                                                disabled={!isEditing}
+                                                className="h-12 text-lg"
+                                              />
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </TabsContent>
+
+                                      {/* Referals Tab Content */}
+                                      <TabsContent value="referals">
+                                        <div className="space-y-4">
+                                          {/* Referrals Count */}
+                                          <div className="flex items-center justify-around">
+                                            <Label htmlFor="earnings" className="text-lg font-medium text-gray-700">
+                                              Total Referrals Count:
+                                            </Label>
+                                            <div className="text-xl font-semibold text-gray-900">{userDetails.referrals.length}</div>
+                                          </div>
+
+                                          {userDetails.referrals.length > 0 ? (
+                                            <div className="mt-4 w-full">
+                                              {/* Table */}
+                                              <div className="w-full overflow-x-auto">
+                                                <table className="min-w-full border-collapse border border-gray-200 rounded-md">
+                                                  {/* Table Header */}
+                                                  <thead className="bg-gray-100">
+                                                    <tr>
+                                                      <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">User ID</th>
+                                                      <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">Email</th>
+                                                      <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                                                    </tr>
+                                                  </thead>
+
+                                                  {/* Table Body */}
+                                                  <tbody className="divide-y divide-gray-200">
+                                                    {currentReferalUsers.map((referral, index) => (
+                                                      <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-3 py-3 text-sm font-medium text-gray-800">{referral.userId}</td>
+                                                        <td className="px-3 py-3 text-sm text-gray-600">{referral.email}</td>
+                                                        <td className="px-3 py-3">
+                                                          <Badge
+                                                            variant={referral.status ? "default" : "destructive"}
+                                                            className={`text-white px-3 py-1 rounded-md ${referral.status
+                                                                ? "bg-green-500 hover:bg-green-600"
+                                                                : "bg-red-500 hover:bg-red-600"
+                                                              }`}
+                                                          >
+                                                            {referral.status ? "Active" : "Inactive"}
+                                                          </Badge>
+                                                        </td>
+                                                      </tr>
+                                                    ))}
+                                                  </tbody>
+                                                </table>
+                                              </div>
+
+                                              {/* Pagination */}
+                                              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+                                                <Button
+                                                  onClick={() => setCurrentReferalPage((prev) => Math.max(prev - 1, 1))}
+                                                  disabled={currentReferalPage === 1}
+                                                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white w-full sm:w-auto"
+                                                >
+                                                  <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                                                </Button>
+                                                <span className="text-sm text-gray-600">
+                                                  Page {currentReferalPage} of {totalReferalPages}
+                                                </span>
+                                                <Button
+                                                  onClick={() => setCurrentReferalPage((prev) => Math.min(prev + 1, totalReferalPages))}
+                                                  disabled={currentReferalPage === totalReferalPages}
+                                                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white w-full sm:w-auto"
+                                                >
+                                                  Next <ChevronRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="text-center text-gray-500 mt-6">
+                                              No referrals found.
+                                            </div>
+                                          )}
+                                        </div>
+                                      </TabsContent>
+
+
+                                    </Tabs>
+
+                                    {/* Save Button */}
+                                    {isEditing && (
+                                      <div className="w-full mt-4">
+                                        <Button
+                                          type="submit"
+                                          className="w-full h-12 text-base font-medium"
+                                          disabled={isSubmitting}
+                                          onClick={handleSubmit}
+                                        >
+                                          <SaveIcon className="mr-2 h-5 w-5" />
+                                          Save Changes
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>}
+                                </DialogContent>
+                              </Dialog>
+                            )
+                          }
                         </div>
                       </TableCell>
                     </TableRow>

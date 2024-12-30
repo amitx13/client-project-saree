@@ -1,15 +1,14 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    host: 'host.docker.internal',
+    host: 'localhost',
     port: 587,
     secure: false,
     tls: {
         rejectUnauthorized: false,
-        ciphers: 'SSLv3'
     },
-    ignoreTLS: true
 });
+
 
 export const sendOTPEmail = async(email: string, otp: string ):Promise<boolean> => {
     try {

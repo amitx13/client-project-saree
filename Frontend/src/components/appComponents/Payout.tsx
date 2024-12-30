@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { IndianRupee, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { IndianRupee, CheckCircle2, XCircle, Clock, Wallet, ArrowDownToLine } from 'lucide-react'
 import { useUserState } from '@/recoil/user'
 import { useNavigate } from 'react-router-dom'
 import { useUserWallet, useUserWithdrawlRequest } from '@/hooks/useUserWallet'
@@ -98,48 +98,60 @@ export default function Payout() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Your Wallet</CardTitle>
-            <CardDescription>Manage your balance and withdrawals</CardDescription>
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Card className="overflow-hidden shadow-lg border-0">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 p-6">
+            <CardTitle className="text-xl font-bold text-white">Wallet</CardTitle>
+            <CardDescription className="text-blue-100">Manage your balance and withdrawals</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-gray-800 rounded-lg">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Available Balance</p>
-                <p className="text-3xl font-bold">{userData && userData.walletBalance}</p>
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Available Balance</p>
+                <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                  ₹{userData && userData.walletBalance.toFixed(2)}
+                </p>
               </div>
-              <IndianRupee className="h-10 w-10 text-primary" />
+              <Wallet className="h-12 w-12 text-blue-500 opacity-50" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className='text-lg'>Withdraw Funds</CardTitle>
-            <CardDescription>Minimum withdrawal amount is ₹200</CardDescription>
+        <Card className="overflow-hidden shadow-lg border-0">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 p-6">
+            <CardTitle className='text-xl font-semibold text-white'>Withdraw Funds</CardTitle>
+            <CardDescription className="text-indigo-100">Minimum withdrawal amount is ₹200</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                placeholder="Enter amount"
-                type="number"
-                value={withdrawAmount}
-                disabled={userData?.walletBalance === 0 }
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-              />
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">Amount</Label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    id="amount"
+                    placeholder="Enter amount"
+                    type="number"
+                    value={withdrawAmount}
+                    disabled={userData?.walletBalance === 0}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    className="pl-10 h-11 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                  />
+                </div>
+              </div>
+              <Button 
+                onClick={handleWithdraw} 
+                disabled={userData?.walletBalance === 0 || parseFloat(withdrawAmount) < 200}
+                className="w-full h-11 text-base font-medium bg-gradient-to-r from-green-500 to-emerald-500 hover:from-indigo-600 hover:to-purple-600 text-white transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                <ArrowDownToLine className="w-5 h-5 mr-2" />
+                Withdraw Funds
+              </Button>
             </div>
           </CardContent>
-          <CardFooter>
-            <Button onClick={handleWithdraw} disabled={userData?.walletBalance === 0 || parseFloat(withdrawAmount) < 200}>
-              Withdraw Funds
-            </Button>
-          </CardFooter>
         </Card>
+        
         {userData && <WithdrawalTable userData={userData}/>}
       </div>
     </div>
@@ -160,39 +172,52 @@ export const WithdrawalTable = ({ userData }: { userData: userDataProps }) => {
   }
 
   return (
-    <Card>
-    <CardHeader>
-      <CardTitle className='text-lg'>Withdrawal History</CardTitle>
-    </CardHeader>
-    <CardContent>
-      {userData && userData.withdrawalRequests.length > 0 ? <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {userData.withdrawalRequests.map((withdrawal) => (
-            <TableRow key={withdrawal.id}>
-              <TableCell>{new Date(withdrawal.createdAt).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <div className='flex items-center'>
-                  <IndianRupee size={16} strokeWidth={1.25} />{withdrawal.amount}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  {getStatusIcon(withdrawal.status)}
-                  <span>{withdrawal.status}</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>: <CardDescription >No Withdrawal History Found</CardDescription>}
-    </CardContent>
-  </Card>
+    <Card className="overflow-hidden shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 p-6">
+        <CardTitle className='text-xl font-semibold text-white'>Withdrawal History</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {userData && userData.withdrawalRequests.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 dark:bg-gray-800">
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Date</TableHead>
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Amount</TableHead>
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userData.withdrawalRequests.map((withdrawal) => (
+                  <TableRow key={withdrawal.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <TableCell className="text-sm">{new Date(withdrawal.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <div className='flex items-center text-gray-900 dark:text-gray-100 font-medium'>
+                        <IndianRupee size={16} strokeWidth={1.25} className="mr-1" />
+                        {withdrawal.amount.toFixed(2)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(withdrawal.status)}
+                        <span className={`text-sm font-medium ${
+                          withdrawal.status === 'COMPLETED' ? 'text-green-600 dark:text-green-400' :
+                          withdrawal.status === 'PENDING' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {withdrawal.status}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <CardDescription className="p-6 text-center text-gray-500 dark:text-gray-400">No Withdrawal History Found</CardDescription>
+        )}
+      </CardContent>
+    </Card>
   )
 }
+

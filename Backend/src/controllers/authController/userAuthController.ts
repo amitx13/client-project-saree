@@ -119,7 +119,6 @@ export const registerUser = async (req: Request, res: Response) => {
             res.status(404).json({ message: "Email already exists." });
             return
         }
-        const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS || "10"));
 
         const userId = await generateUserId();
 
@@ -135,7 +134,7 @@ export const registerUser = async (req: Request, res: Response) => {
                 Username: userName,
                 email: email.toLowerCase(),
                 mobile,
-                password: hashedPassword,
+                password: password,
                 referrerId,
                 address: {
                     create: {
@@ -205,8 +204,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return;
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
+        if (user.password !== password) {
             res.status(400).json({ message: "Invalid password." });
             return;
         }

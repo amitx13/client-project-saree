@@ -3,7 +3,7 @@ import os from "os";
 import app from './app';
 
 const PORT = process.env.PORT || 3000;
-const totalCPUs = 2 //os.cpus().length;
+const totalCPUs = os.cpus().length;
 
 if (cluster.isPrimary) {
 

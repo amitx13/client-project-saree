@@ -16,6 +16,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { useUserUpdatePaymentStatusToCompleted, useUserUpdatePaymentStatusToRejected } from '@/hooks/useUserUpdatePaymentStatus'
 import { toast } from '@/hooks/use-toast'
+import { useNavigate } from 'react-router-dom'
 
 interface BankDetails{
   id: string;
@@ -40,6 +41,7 @@ type Payout = {
 
 export default function UserPayoutManagement() {
   const [user,] = useUserState()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -54,6 +56,10 @@ export default function UserPayoutManagement() {
   }
 
   useEffect(()=>{
+    if(!user){
+      navigate("/login")
+      return
+    }
     setIsLoading(true)
     fetchAllWithdrawalRequests()
     setIsLoading(false)

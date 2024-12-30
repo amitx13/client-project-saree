@@ -25,3 +25,27 @@ export const useGeneratedCodes = async(token:string, codeCount: number) => {
         }
     }
 }
+
+
+export const useTransferGeneratedCodes = async(token:string, transferCodes:{userId:string, quantity:number}) => {
+    try {
+        const res = await api.post(`${API_BASE_URL}/api/v1/admin/TransferActivationCode`,  {
+            userId: transferCodes.userId,
+            quantity: transferCodes.quantity
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        return res.data 
+    }
+    catch (e:any){
+        if(e.response){
+            return e.response.data
+        }else{
+            return { success: false, message:"Something went wrong!" };
+        }
+    }
+}

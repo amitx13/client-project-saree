@@ -18,6 +18,8 @@ import { useUserOrdersDetails } from "@/hooks/useUserOrdersDetails"
 import { useUserState } from "@/recoil/user"
 import API_BASE_URL from "@/config"
 import { useOrderDispatch } from "@/hooks/useOrderDispatch"
+import { useNavigate } from "react-router-dom"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 
 type Order = {
   id: string
@@ -28,12 +30,22 @@ type Order = {
   price: number
   image: string
   status: boolean
+  Address:{
+      id: string;
+      createdAt: Date;
+      userId: string;
+      houseNo: string;
+      city: string;
+      state: string;
+      pinCode: string;
+  }
 }
 
 
 export default function OrderManagement() {
   const [user,] = useUserState()
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [orders, setOrders] = useState<Order[]>()
   const [searchTerm, setSearchTerm] = useState("")
   const [showHistory, setShowHistory] = useState(false)
@@ -43,12 +55,17 @@ export default function OrderManagement() {
 
   const fetchAllUserOrdersDetails = async () => {
     const res = await useUserOrdersDetails(user.token)
+    console.log("res",res)
     if(res && res.success){
       setOrders(res.ordersData)
     }
   }
 
   useEffect(()=>{
+    if(!user){
+      navigate("/login")
+      return
+    }
     setIsLoading(true)
     fetchAllUserOrdersDetails()
     setIsLoading(false)
@@ -133,6 +150,7 @@ export default function OrderManagement() {
                   <TableHead className="w-[100px]">Image</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
                   {!showHistory && <TableHead className="w-[150px]">Action</TableHead>}
+                  <TableHead className="w-[100px]">Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,6 +192,42 @@ export default function OrderManagement() {
                         </div>
                       </TableCell>
                     )}
+                    <TableCell>
+                    <Dialog>
+  <DialogTrigger asChild>
+    <Button variant="outline" size="sm">
+      Details
+    </Button>
+  </DialogTrigger>
+  <DialogContent className="sm:max-w-[500px] rounded-lg shadow-md bg-white p-6">
+    <DialogHeader>
+      <DialogTitle className="text-lg font-semibold text-gray-800">
+        Order Details
+      </DialogTitle>
+    </DialogHeader>
+    <div className="grid gap-6 py-4">
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="fullName" className="text-right font-medium text-gray-600">
+          Full Name:
+        </Label>
+        <div className="col-span-3 text-gray-800">{order.fullName}</div>
+      </div>
+      <div className="grid grid-cols-4 items-start gap-4">
+        <Label htmlFor="address" className="text-right font-medium text-gray-600">
+          Address:
+        </Label>
+        <div className="col-span-3 text-gray-800 space-y-1">
+          <p><span className="font-medium pr-2">House No:</span>{order.Address.houseNo}</p>
+          <p><span className="font-medium pr-2">City: </span>{order.Address.city}</p>
+          <p><span className="font-medium pr-2">State: </span>{order.Address.state}</p>
+          <p><span className="font-medium pr-2">Pin Code: </span>{order.Address.pinCode}</p>
+        </div>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -18,6 +18,7 @@ import { useAddNewProduct, useFetchAllProducts } from "@/hooks/useFetchAllProduc
 import { useUserState } from "@/recoil/user"
 import API_BASE_URL from "@/config"
 import { useDeleteProduct, useUpdateProductStock } from "@/hooks/useUpdateProductStock"
+import { useNavigate } from "react-router-dom"
 
 type Product = {
   id: string;
@@ -36,6 +37,7 @@ interface AddProduct {
 export default function ProductManagementPage() {
   const [user,] = useUserState()
   const { toast } = useToast()
+  const navigate = useNavigate()
   let fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isLoading,setIsLoading] = useState(false)
@@ -60,6 +62,10 @@ export default function ProductManagementPage() {
   }
 
   useEffect(()=>{
+    if(!user){
+      navigate("/login")
+      return
+    }
     setIsLoading(true)
     fetchAllProducts()
     setIsLoading(false)

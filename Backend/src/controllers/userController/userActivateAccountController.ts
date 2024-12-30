@@ -119,7 +119,7 @@ export const activateAccountWithCode = async (req: Request, res: Response) => {
 
     try {
         const activationCode = await prisma.activationCode.findUnique({ where: { code } });
-        if (!activationCode || activationCode.isUsed || (activationCode.expiresAt && activationCode.expiresAt < new Date())) {
+        if (!activationCode || activationCode.isUsed ) {
             res.status(400).json({ success: false, message: "Invalid or expired activation code" });
             return;
         }

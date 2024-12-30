@@ -11,4 +11,5 @@ export const RouteSList = {
     logout : '/logout',
     Profile: '/profile',
     resetPassword : '/reset-password',
+    welcome:'/welcome_to_jd_lifestyle/:userId'
 }

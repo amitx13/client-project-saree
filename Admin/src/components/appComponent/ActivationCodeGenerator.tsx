@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Copy, Share2, Mail, MessageCircle, Smartphone, Link, Wand2, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useGeneratedCodes } from "@/hooks/useGeneratedCodes"
+import { useGeneratedCodes, useTransferGeneratedCodes } from "@/hooks/useGeneratedCodes"
 import { useUserState } from "@/recoil/user"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useGetAllCodes } from "@/hooks/useGetAllCodes"
+import { useNavigate } from "react-router-dom"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
 interface GeneratedCode {
   id: string
@@ -23,16 +25,27 @@ interface GeneratedCode {
   createdAt: string
 }
 
+interface TransferCode {
+  userId: string
+  quantity: number
+}
+
 export default function ActivationCodeGenerator() {
   const [user,] = useUserState()
+  const navigate = useNavigate()
   const { toast } = useToast()
   const [codeCount, setCodeCount] = useState(0)
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([])
   const [allCodes, setAllCodes] = useState<GeneratedCode[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const codesPerPage = 5
+  const [transferCodes, setTransferCodes] = useState<TransferCode>({ userId: "", quantity: 0 })
 
   useEffect(() => {
+    if(!user){
+      navigate("/login")
+      return
+    }
     fetchAllCodes()
   }, [])
 
@@ -112,93 +125,136 @@ export default function ActivationCodeGenerator() {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
 
+  const TransferCodesToUser = async () => {
+    const codes = await useTransferGeneratedCodes(user.token,transferCodes)
+    if (codes.success) {
+      toast({
+        title: "Codes Transfered!",
+        description: "Activation codes Transfered successfully.",
+      })
+    } else {
+      toast({
+        title: "Error!",
+        description: "Failed to Generate or Transfered activation codes.",
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 p-4 sm:p-6 md:p-8 flex flex-col items-center justify-start">
-      <div className="w-full max-w-2xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden mb-8">
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-6">
-          <h1 className="text-2xl sm:text-3xl font-bold">Activation Code Generator</h1>
-          <p className="text-pink-100 mt-2">Generate and share activation codes with users</p>
-        </div>
-        <div className="p-6">
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="codeCount">Number of Codes</Label>
-              <Input
-                id="codeCount"
-                type="number"
-                value={codeCount}
-                onChange={(e) => setCodeCount(Math.max(1, parseInt(e.target.value)))}
-                min="1"
-                className="border-gray-300"
-              />
-            </div>
-            <Button 
-              onClick={generateCodes}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
-              disabled={codeCount < 1 || typeof codeCount !== "number" || Number.isNaN(codeCount)}
-            >
-              <Wand2 className="mr-2 h-4 w-4" /> Generate Codes
-            </Button>
-            {generatedCodes.length > 0 && (
+
+  <Tabs defaultValue="generator" className="w-full max-w-4xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">
+      <TabsList className="flex space-x-4 bg-gray-100 p-4">
+        <TabsTrigger value="generator" className="px-4 py-2 rounded-md focus:outline-none bg-pink-100 hover:bg-pink-200">
+          Generator Activation Code
+        </TabsTrigger>
+        <TabsTrigger value="transfer" className="px-4 py-2 rounded-md focus:outline-none bg-blue-100 hover:bg-blue-200">
+          Transfer Activation Code
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Transfer Activation Code Section */}
+      <TabsContent value="transfer" className="p-6">
+        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-teal-500 text-white p-6">
+            <h1 className="text-2xl sm:text-3xl font-bold">Transfer Activation Code</h1>
+            <p className="text-blue-100 mt-2">Generate and transfer activation codes to a specific user</p>
+          </div>
+          <div className="p-6">
+            <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="generatedCodes">Generated Codes</Label>
-                <Textarea
-                  id="generatedCodes"
-                  value={generatedCodes.join("\n")}
-                  readOnly
-                  rows={Math.min(10, generatedCodes.length)}
-                  className="border-gray-300 bg-white/50"
+                <Label htmlFor="userId">User ID</Label>
+                <Input
+                  id="userId"
+                  type="text"
+                  value={transferCodes.userId}
+                  onChange={(e) => setTransferCodes((prev) => ({ ...prev, userId: e.target.value }))}
+                  className="border-gray-300"
                 />
               </div>
-            )}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={transferCodes.quantity}
+                  onChange={(e) => setTransferCodes((prev) => ({ ...prev, quantity: parseFloat(e.target.value) }))}
+                  min="1"
+                  className="border-gray-300"
+                />
+              </div>
+              <Button
+                onClick={TransferCodesToUser}
+                className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
+                disabled={!transferCodes.userId || transferCodes.quantity < 1 || typeof transferCodes.quantity !== "number" || Number.isNaN(transferCodes.quantity)}
+              >
+                Transfer Codes
+              </Button>
+            </div>
           </div>
         </div>
-        {generatedCodes.length > 0 && (
-          <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
-            <div className="flex space-x-2">
-              <Button variant="outline" size="icon" onClick={() => copyToClipboard(generatedCodes.join("\n"))}>
-                <Copy className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => shareVia("email", generatedCodes.join("\n"))}>
-                    <Mail className="mr-2 h-4 w-4" />
-                    <span>Email</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => shareVia("whatsapp", generatedCodes.join("\n"))}>
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    <span>WhatsApp</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => shareVia("telegram", generatedCodes.join("\n"))}>
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    <span>Telegram</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => shareVia("sms", generatedCodes.join("\n"))}>
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    <span>SMS</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => shareVia("copy", generatedCodes.join("\n"))}>
-                    <Link className="mr-2 h-4 w-4" />
-                    <span>Copy Link</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setGeneratedCodes([])}
-              className="hover:bg-red-100 hover:text-red-600 transition-colors"
-            >
-              Clear Codes
-            </Button>
+      </TabsContent>
+
+      {/* Activation Code Generator Section */}
+      <TabsContent value="generator" className="p-6">
+        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-6">
+            <h1 className="text-2xl sm:text-3xl font-bold">Activation Code Generator</h1>
+            <p className="text-pink-100 mt-2">Generate and share activation codes with users</p>
           </div>
-        )}
-      </div>
+          <div className="p-6">
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="codeCount">Number of Codes</Label>
+                <Input
+                  id="codeCount"
+                  type="number"
+                  value={codeCount}
+                  onChange={(e) => setCodeCount(Math.max(1, parseInt(e.target.value)))}
+                  min="1"
+                  className="border-gray-300"
+                />
+              </div>
+              <Button
+                onClick={generateCodes}
+                className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
+                disabled={codeCount < 1 || typeof codeCount !== "number" || Number.isNaN(codeCount)}
+              >
+                <Wand2 className="mr-2 h-4 w-4" /> Generate Codes
+              </Button>
+              {generatedCodes.length > 0 && (
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="generatedCodes">Generated Codes</Label>
+                  <Textarea
+                    id="generatedCodes"
+                    value={generatedCodes.join("\n")}
+                    readOnly
+                    rows={Math.min(10, generatedCodes.length)}
+                    className="border-gray-300 bg-white/50"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          {generatedCodes.length > 0 && (
+            <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
+              <div className="flex space-x-2">
+                <Button variant="outline" size="icon" onClick={() => copyToClipboard(generatedCodes.join("\n"))}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setGeneratedCodes([])}
+                className="hover:bg-red-100 hover:text-red-600 transition-colors"
+              >
+                Clear Codes
+              </Button>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
 
       <div className="w-full max-w-4xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden">
         <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-6">

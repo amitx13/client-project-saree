@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { CopyIcon, CheckCircle } from 'lucide-react'
-import { User } from "lucide-react"
+import { CopyIcon, CheckCircle, Wallet, Users, Gift, Shield, TrendingUp } from 'lucide-react'
+import { User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLogout, useUserState } from '@/recoil/user'
 import { useUserData } from '@/hooks/useUserData'
@@ -123,23 +123,28 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+    <div className="container mx-auto p-4 min-h-screen bg-gradient-to-b from-background to-background/50 dark:from-background dark:to-background/50">
       <ActivationPaymentModal isOpen={isOpen} setIsOpen={setIsOpen}/>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Account Activation Card */}
-        <Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-white/50 dark:from-gray-900 dark:to-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle>Account Status</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-purple-500" />
+              <CardTitle>Account Status</CardTitle>
+            </div>
             <CardDescription>Activate your account to start earning</CardDescription>
           </CardHeader>
           <CardContent>
             {user && user?.membershipStatus ? (
-              <Badge className="w-full justify-center py-2">
+              <Badge className="w-full justify-center py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300">
                 <CheckCircle className="mr-2 h-4 w-4" /> Activated
               </Badge>
             ) : (
-              <Button onClick={activateAccount} className="w-full" >
+              <Button 
+                onClick={activateAccount} 
+                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+              >
                 Activate Account (₹550)
               </Button>
             )}
@@ -147,18 +152,25 @@ export default function Dashboard() {
         </Card>
 
         {/* Saree Claim Card */}
-        <Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-white/50 dark:from-gray-900 dark:to-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle>Reward</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Gift className="w-5 h-5 text-blue-500" />
+              <CardTitle>Reward</CardTitle>
+            </div>
             <CardDescription>Claim your exclusive rewards</CardDescription>
           </CardHeader>
           <CardContent>
             {false ? (
-              <Badge className="w-full justify-center py-2">
+              <Badge className="w-full justify-center py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300">
                 <CheckCircle className="mr-2 h-4 w-4" /> Claimed
               </Badge>
             ) : (
-              <Button onClick={()=>navigate("/rewards") } disabled={!user?.membershipStatus || false} className="w-full">
+              <Button 
+                onClick={()=>navigate("/rewards")} 
+                disabled={!user?.membershipStatus || false} 
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+              >
                 Claim
               </Button>
             )}
@@ -166,9 +178,12 @@ export default function Dashboard() {
         </Card>
 
         {/* Referral Card */}
-        {user && <Card>
+        {user && <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-white/50 dark:from-gray-900 dark:to-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle>Referral Program</CardTitle>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="w-5 h-5 text-cyan-500" />
+              <CardTitle>Referral Program</CardTitle>
+            </div>
             <CardDescription>Earn ₹200 for each referral</CardDescription>
           </CardHeader>
           <CardContent>
@@ -177,21 +192,31 @@ export default function Dashboard() {
                 id='referralCode'
                 value={user?.id}
                 readOnly
-                className="flex-grow p-2 border rounded text-black"
+                className="flex-grow p-2 border-2 rounded-md bg-background/50 backdrop-blur-sm transition-all duration-300 focus:border-cyan-500 dark:focus:border-cyan-400"
               />
-              <Button variant="outline" size="icon" onClick={copyReferralCode}>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={copyReferralCode}
+                className="hover:bg-cyan-500/10 hover:text-cyan-500 transition-colors"
+              >
                 <CopyIcon className="h-4 w-4" />
               </Button>
             </div>
             <CardDescription>Total Reward earned through referral</CardDescription>
-            <p className="text-2xl font-bold">₹{userData?.levelIncome || 0} earned</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+              ₹{userData?.levelIncome || 0} earned
+            </p>
           </CardContent>
         </Card>}
 
         {/* Team Size and Rewards Card */}
-        {user && <Card className="md:col-span-2 lg:col-span-3">
+        {user && <Card className="md:col-span-2 lg:col-span-3 border-0 shadow-lg bg-gradient-to-br from-white to-white/50 dark:from-gray-900 dark:to-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle>Team</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Users className="w-5 h-5 text-blue-500" />
+              <CardTitle>Team</CardTitle>
+            </div>
             <CardDescription>Grow your team to unlock bigger rewards</CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
@@ -200,36 +225,43 @@ export default function Dashboard() {
                 const level2to6 = userData.levelRewards[0].level2Count + userData.levelRewards[0].level3Count + userData.levelRewards[0].level4Count + userData.levelRewards[0].level5Count + userData.levelRewards[0].level6Count;
                 return (
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Level 1</span>
-                      <span className="font-semibold">{userData.levelRewards[0].level1Count || 0}</span>
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 transition-all duration-300 hover:from-purple-500/20 hover:to-blue-500/20">
+                      <span className="text-sm font-medium">Level 1</span>
+                      <span className="font-semibold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                        {userData.levelRewards[0].level1Count || 0}
+                      </span>
                     </div>
-                    {renderUserIcons(userData.levelRewards[0].level1Count || 0, 5)}
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Level 2 - 6</span>
-                      <span className="font-semibold">{level2to6}</span>
+                    <div className="pl-3">{renderUserIcons(userData.levelRewards[0].level1Count || 0, 5)}</div>
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 transition-all duration-300 hover:from-blue-500/20 hover:to-cyan-500/20">
+                      <span className="text-sm font-medium">Level 2 - 6</span>
+                      <span className="font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                        {level2to6}
+                      </span>
                     </div>
-                    {renderUserIcons(level2to6, 8)}
+                    <div className="pl-3">{renderUserIcons(level2to6, 8)}</div>
                   </div>
                 );
               })()
             ) : (
-              <div>
-                <p className="text-base font-bold">No Team Data Found</p>
+              <div className="text-center p-6 rounded-lg bg-gradient-to-r from-gray-500/10 to-gray-500/10">
+                <p className="text-base font-bold text-gray-500">No Team Data Found</p>
               </div>
             )}
-      </CardContent>
+          </CardContent>
         </Card>}
 
         {/* Total Earnings Card */}
-        <Card className="md:col-span-2 lg:col-span-3">
+        <Card className="md:col-span-2 lg:col-span-3 border-0 shadow-lg bg-gradient-to-br from-white to-white/50 dark:from-gray-900 dark:to-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle>Wallet Balance</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Wallet className="w-5 h-5 text-green-500" />
+              <CardTitle>Wallet Balance</CardTitle>
+            </div>
             <CardDescription>Amount in INR</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-center">
-              ₹{userData?.walletBalance || 0 } 
+            <p className="text-4xl font-bold text-center bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent transition-all duration-300">
+              ₹{userData?.walletBalance || 0} 
             </p>
           </CardContent>
         </Card>
@@ -237,3 +269,4 @@ export default function Dashboard() {
     </div>
   )
 }
+

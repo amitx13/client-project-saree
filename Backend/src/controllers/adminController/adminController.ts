@@ -171,12 +171,49 @@ export const createMultipleActivationCodes = async (req: Request, res: Response)
       const activationCodeData = codes.map((code) => ({
         code,
         isUsed: false,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Expires in 7 days
       }))
   
       await prisma.activationCode.createMany({
         data: activationCodeData,
         skipDuplicates: true  // Avoids errors if there are duplicate codes
+      })
+  
+      res.status(200).json({ success: true, codes })
+    } catch (error) {
+      console.error('Error creating activation codes:', error)
+      res.status(500).json({ success:false ,message: 'An unexpected error occurred.' })
+    }
+  }
+
+  export const createMultipleActivationCodesAndTransfer = async (req: Request, res: Response) => {
+    const { userId,quantity } = req.body
+  
+    if (!userId || !quantity || quantity <= 0) {
+      res.status(400).json({ success:false ,message: "Invalid request. Please provide a valid positive integer for 'quantity'." })
+      return
+    }
+  
+    try {
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) {
+            res.status(404).json({ success: false, message: "No Valid User found with this UserId." });
+            return;
+        }
+
+
+      const codes = Array.from({ length: quantity }, () => generateActivationCode())
+  
+      const activationCodeData = codes.map((code) => ({
+        ownerUserID: userId,
+        code,
+        isUsed: false,
+      }))
+  
+      await prisma.activationCode.createMany({
+        data: activationCodeData,
+        skipDuplicates: true
       })
   
       res.status(200).json({ success: true, codes })
@@ -217,6 +254,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
         const users = await prisma.user.findMany({
             include: {
                 referrals: true,
+                address: true,
+                BankDetails:true,
             }
         });
         const usersData = users.filter(user => user.role !== "ADMIN");
@@ -224,6 +263,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
             return {
                 id: user.id,
                 name: user.fullName,
+                mobile: user.mobile,
+                password: user.password,
                 username: user.Username,
                 email: user.email,
                 registrationDate: user.createdAt,          
@@ -236,6 +277,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
                 })),
                 levelIncome:user.levelIncome,
                 walletBalance: user.walletBalance,
+                address: user.address[0],
+                bankDetails: user.BankDetails[0]
             }
         })
 
@@ -301,9 +344,15 @@ export const getAllOrdersDetails = async (req: Request, res: Response) => {
         const orders = await prisma.order.findMany({
             include: {
                 saree: true,
-                user: true
+                user: {
+                    include:{
+                        address:true
+                    }
+                }
             }
         });
+
+
 
         const ordersData = orders.map(order => {
             return {
@@ -314,7 +363,8 @@ export const getAllOrdersDetails = async (req: Request, res: Response) => {
                 orderPlacedAt: order.createdAt,
                 price: order.saree.price,
                 image: order.saree.image,
-                status: order.dispatch
+                status: order.dispatch,
+                Address:order.user.address[0]
             }
         })
 
@@ -452,9 +502,64 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
 export const getAllCodes = async (req: Request, res: Response) => {
     try {
-        const data = await prisma.activationCode.findMany();
+        const data = await prisma.activationCode.findMany(
+            {
+                where: {
+                    ownerUserID:"JD00001"
+                }
+            }
+        );
         res.status(200).json({ success:true, data });
     } catch (error) {
         res.status(500).json({ success:false, message: "Internal server error while fetching codes" });
+    }
+}
+
+export const updateUserData = async (req: Request, res: Response) => {
+    const { userID, UserDetails } = req.body;
+    if (!userID || !UserDetails) {
+        res.status(400).json({ success:false, message: "All fields are required" });
+        return
+    }
+    console.log("UserDetails:", UserDetails);
+
+    const { name, email, mobile, address, bankDetails,password } = UserDetails;
+
+    try {
+        const resc = await prisma.user.update({
+            where: { id: UserDetails.id },
+            data: {
+                fullName: name,
+                email,
+                mobile,
+                password,
+                address: {
+                    update: {
+                        where: { id: address.id },
+                        data:{
+                            houseNo: address.houseNo,
+                            city: address.city,
+                            state: address.state,
+                            pinCode: address.pinCode,
+                        }
+                    },
+                },
+                BankDetails: {
+                    update: {
+                        where: { id: bankDetails.id },
+                        data:{
+                            accountNo: bankDetails.accountNo,
+                            BankName: bankDetails.BankName,
+                            ifscCode: bankDetails.ifscCode,
+                        }
+                    },
+                },
+            },
+        });
+
+        res.status(200).json({ success:true, message: "User data updated successfully." });
+    } catch (error) {
+        console.log("Error updating user data:", error);
+        res.status(500).json({ success:false, message: "Internal server error while updating user data" });
     }
 }

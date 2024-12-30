@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { EyeClosed, LoaderCircle } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Eye } from 'lucide-react';
 import { useCreateAccount } from "@/hooks/useCreateAccount";
 import { useToast } from '@/hooks/use-toast'
 import { useUserState } from '@/recoil/user'
+import { useNavigate } from 'react-router-dom'
 
 export interface RegisterFormData {
     name: string;
@@ -18,6 +19,7 @@ export interface RegisterFormData {
 
 export default function Register() {
     const [user] = useUserState()
+    const navigate = useNavigate()
     const {toast} = useToast()
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +28,13 @@ export default function Register() {
         email: '',
         password: ''
     })
+
+    useEffect(()=>{
+        if(!user){
+            navigate("/login")
+            return
+        }
+    },[])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -75,9 +84,6 @@ export default function Register() {
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center">Register New Admin</CardTitle>
-                    <CardDescription className="text-center">
-                        to continue to mlm
-                    </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">
                     <div >

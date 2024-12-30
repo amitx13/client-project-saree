@@ -107,11 +107,10 @@ export const resetPassword = async (req: Request, res: Response) => {
       return
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
       where: { id: tokenRecord.userId },
-      data: { password: hashedPassword },
+      data: { password: newPassword },
     });
 
     await prisma.passwordResetToken.delete({
