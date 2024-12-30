@@ -133,7 +133,6 @@ const Activation = () => {
                         title: "Activated!",
                         description:`${res.message}`,
                     })
-                    navigate("/dashboard");
                 }
                 else{
                     toast({

@@ -1,33 +1,30 @@
 version: '3.8'
-
 services:
   backend:
     build: .
-    ports:
-      - "3000:3000"
+    network_mode: "host"
     environment:
-      - DATABASE_URL=postgresql://postgres:JDLifestylepostgresPassword@db:5432/postgres
+      - DATABASE_URL=postgresql://postgres:JDLifestylepostgresPassword@localhost:5432/postgres
       - NODE_ENV=development
       - PORT=3000
       - JWT_SECRET=JDLifestyle.store.secret
       - SALT_ROUNDS=10
-      - FRONTEND_URL=https://jdlifestyle.store
+      - FRONTEND_URL=https://www.jdlifestyle.store/
     depends_on:
       - db
     restart: always
     volumes:
       - ./public/uploads:/usr/src/app/public/uploads
-
+  
   db:
     image: postgres:14
-    ports:
-      - "5432:5432"
+    network_mode: "host"
     environment:
       - POSTGRES_PASSWORD=JDLifestylepostgresPassword
       - POSTGRES_DB=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
-  
+
 volumes:
   postgres_data:

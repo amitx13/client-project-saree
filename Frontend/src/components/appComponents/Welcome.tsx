@@ -67,7 +67,7 @@ const WelcomePage = () => {
         }
     }, [])
 
-    if (loading) {
+    if (loading || !userData) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <LoaderCircle className="animate-spin" size={80} />
