@@ -79,9 +79,9 @@ export default function Dashboard() {
     setIsOpen(true)
   }
 
-  const copyReferralCode = async () => {
+  const copyReferralCode = async (value:string) => {
     try {
-      const textToCopy = user?.id || '';
+      const textToCopy = value || '';
       const copyText = document.getElementById('referralCode') as HTMLInputElement;
       
       if (navigator.clipboard && window.isSecureContext) {
@@ -190,14 +190,14 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2 mb-4">
               <input
                 id='referralCode'
-                value={user?.id}
+                value={`https://jdlifestyle.store/register?referral_id=${user?.id}`}
                 readOnly
                 className="flex-grow p-2 border-2 rounded-md bg-background/50 backdrop-blur-sm transition-all duration-300 focus:border-cyan-500 dark:focus:border-cyan-400"
               />
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={copyReferralCode}
+                onClick={() => copyReferralCode(`https://jdlifestyle.store/register?referral_id=${user?.id}`)}
                 className="hover:bg-cyan-500/10 hover:text-cyan-500 transition-colors"
               >
                 <CopyIcon className="h-4 w-4" />

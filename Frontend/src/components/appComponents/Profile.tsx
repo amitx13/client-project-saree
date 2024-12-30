@@ -39,6 +39,7 @@ export interface ProfileFormProps {
   Username: string
   email: string
   fullName: string
+  password:string
   mobile: string
   membershipStatus: boolean
   walletBalance: number
@@ -328,6 +329,16 @@ export default function Profile() {
                     name="email"
                     type="email"
                     value={userDetails.email}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="h-12 text-lg bg-card"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-base">Password</Label>
+                  <Input
+                    name="password"
+                    value={userDetails.password}
                     onChange={handleChange}
                     disabled={!isEditing}
                     className="h-12 text-lg bg-card"

@@ -53,7 +53,7 @@ export const getProfileData = async (req:Request, res:Response) => {
             return
         }
 
-        const { password, referrerId, createdAt,levelIncome,orderStatus,role, ...userData } = user;
+        const { referrerId, createdAt,levelIncome,orderStatus,role, ...userData } = user;
 
         res.status(200).json({ userData });
 
@@ -85,14 +85,14 @@ export const getUserTeamData = async (req:Request, res:Response) => {
         const referrals = await prisma.user.findMany({
             where: { 
                 referrerId: id,
-                membershipStatus:true
              },
         })
 
         const referralsData = referrals.map(referral => ({
-            
             name: referral.fullName,
-            mobile: referral.mobile
+            mobile: referral.mobile,
+            userId: referral.id,
+            status:referral.membershipStatus
         }));
 
         if(user.referrerId){
@@ -103,7 +103,7 @@ export const getUserTeamData = async (req:Request, res:Response) => {
             if (sponsored) {
                 const sponsoredData = {
                     name: sponsored.fullName,
-                    email: sponsored.email,
+                    userId: sponsored.id,
                     phone: sponsored.mobile
                 }
 

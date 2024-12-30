@@ -400,6 +400,8 @@ export interface RegisterFormData {
 
 export default function Register() {
   const [user,] = useUserState();
+  const params = new URLSearchParams(window.location.search);
+  const referrerId = params.get('referral_id');
   const { toast } = useToast()
   const navigate = useNavigate()
   const [, updateUser] = useUserState();
@@ -414,7 +416,7 @@ export default function Register() {
     email: '',
     mobile: '',
     password: '',
-    referralCode: '',
+    referralCode: referrerId || '',
     address: {
       houseNo: '',
       city: '',

@@ -11,7 +11,7 @@ export const updateUserData = async (req:Request, res:Response) => {
         return
     }
 
-    const { fullName, email, mobile, address, BankDetails } = UserDetails;
+    const { fullName, email, password, mobile, address, BankDetails } = UserDetails;
 
     try {
         const user = await prisma.user.update({
@@ -20,6 +20,7 @@ export const updateUserData = async (req:Request, res:Response) => {
                 fullName,
                 email,
                 mobile,
+                password,
                 address: {
                     update: {
                         where: { id: address[0].id },

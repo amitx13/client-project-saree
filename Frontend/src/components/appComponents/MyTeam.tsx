@@ -13,10 +13,12 @@ import { Input } from "../ui/input";
 interface UserDataProps {
   sponsored: {
     name: string
-    email: string
+    userId: string
     phone: string
   }
   referrals: {
+    userId: string
+    status:boolean
     name: string
     mobile: string
   }[]
@@ -63,6 +65,8 @@ const MyTeam = () => {
     }
   }, [user])
 
+  console.log("userData:",userData)
+
   const copyReferralCode = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content)
@@ -97,14 +101,14 @@ const MyTeam = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Input
-                    value={userData.sponsored.email}
+                    value={userData.sponsored.userId}
                     readOnly
                     className="flex-grow border-2 transition-all duration-300 focus:border-purple-500 dark:focus:border-purple-400"
                   />
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    onClick={() => copyReferralCode(userData.sponsored.email.toString())}
+                    onClick={() => copyReferralCode(userData.sponsored.userId.toString())}
                     className="hover:bg-purple-500/10 hover:text-purple-500 transition-colors"
                   >
                     <CopyIcon className="h-4 w-4" />
@@ -143,7 +147,7 @@ const MyTeam = () => {
               </div>
             </CardHeader>
             <CardContent className="flex-grow">
-              {userData.level[0] ? (
+              {userData.level && userData.level[0] ? (
                 <div className="space-y-3">
                   {[
                     { level: 'Level 1', count: userData.level[0].level1Count },
@@ -188,6 +192,8 @@ export default MyTeam;
 
 interface TeamMember {
   name: string
+  userId: string
+  status:boolean
   mobile: string
 }
 
@@ -227,7 +233,10 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 space-y-1">
+                <span className="flex items-center justify-between">
                 <p className="text-sm font-medium leading-none">{member.name}</p>
+                <p className={`${member.status?"text-green-500":"text-red-500"}`}>{member.status?"Active":"InActive"}</p>
+                </span>
                 <p className="text-sm text-muted-foreground flex items-center">
                   <Phone className="h-3 w-3 mr-1 text-cyan-500" />
                   {member.mobile}
@@ -265,4 +274,3 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
     </>
   )
 }
-
