@@ -122,6 +122,7 @@ export default function Payout() {
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 p-6">
             <CardTitle className='text-xl font-semibold text-white'>Withdraw Funds</CardTitle>
             <CardDescription className="text-indigo-100">Minimum withdrawal amount is ₹200</CardDescription>
+            <CardDescription className="text-indigo-100">A 5% platform fee will be charged on every withdrawal.</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">

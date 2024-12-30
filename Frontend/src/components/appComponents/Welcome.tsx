@@ -75,14 +75,6 @@ const WelcomePage = () => {
         )
     }
 
-    if (!userData) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <h1 className="text-2xl text-red-500">No Data Found</h1>
-            </div>
-        )
-    }
-
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="flex justify-center mb-8 relative">

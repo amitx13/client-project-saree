@@ -33,11 +33,12 @@ export const createWithdrawalRequest = async (req: Request, res: Response) => {
             return
         }
 
-        // Create withdrawal request
+        const withdrawAmount = amount - (amount * 0.05);
+
         await prisma.withdrawalRequest.create({
             data: {
                 userId: user.id,
-                amount,
+                amount:withdrawAmount,
                 status: "PENDING",
             },
         });
