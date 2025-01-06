@@ -31,6 +31,32 @@ export const getUserData = async (req:Request, res:Response) => {
     }
 }
 
+export const getUserName = async (req:Request, res:Response) => {
+    const { id } = req.params;
+
+    if (!id) {
+        res.status(400).json({  success:false, message: "userId is required." });
+        return
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id },
+        });
+
+        if (!user) {
+            res.status(404).json({ success:false, message: "User not found." });
+            return
+        }
+
+        res.status(200).json({ success:true, fullname: user.fullName });
+
+    } catch (error) {
+        console.error("Error getting user data:", error);
+        res.status(500).json({  success:false, error: "Something went wrong while getting user data." });
+    }
+}
+
 export const getProfileData = async (req:Request, res:Response) => {
     const { id } = req.params;
 

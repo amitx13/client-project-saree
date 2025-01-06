@@ -28,6 +28,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Card, CardContent } from "../ui/card"
 import { useUpdateUserData } from "@/hooks/useUpdateUserData"
 
+type User = {
+  id: string
+  name: string
+  username: string
+  password: string
+  email: string
+  mobile: string
+  registrationDate: string
+  status: boolean
+  referrer: string
+  referrals: { userId: string, email: string, status: boolean }[]
+  walletBalance: number
+  levelIncome: number
+  address: {id:string, houseNo: string, city: string, state: string, pinCode: string }
+  bankDetails: {id:string, accountNo: string, ifscCode: string, BankName: string }
+}
+
 export type Users = {
   id: string
   name: string
@@ -63,7 +80,8 @@ export default function UserManagement() {
   const fetchData = async () => {
     const Data = await useFetchAllUsers(user.token)
     if (Data.success) {
-      setUsers(Data.userData)
+      const sortByDate = Data.userData.sort((a:User, b:User) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
+      setUsers(sortByDate)
     }
   }
 

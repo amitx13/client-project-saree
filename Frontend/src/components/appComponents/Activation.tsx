@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/pagination"
 import { getAllReceivedCode } from '@/hooks/useReceivedCode'
 import { useTransferCode } from '@/hooks/useTransferCode'
+import { useUserName } from '@/hooks/useCheckUserName'
 
 interface ReceivedCode {
     id: string;
@@ -57,6 +58,8 @@ const Activation = () => {
         userId: '',
         code: '',
     });
+
+    const [sponcerName,setSponcerName] = useState<string|null>("");
     
     const [transfer, setTransfer] = useState<TransferCode>({
         userId: '',
@@ -92,8 +95,25 @@ const Activation = () => {
         fetchReceivedCode()
     }, [user])
 
-
-
+    const fetchSponcerName = async () => {
+        const res = await useUserName(activationCode.userId);
+        if(res.success){
+            setSponcerName(res.fullname)
+        }
+        else{
+            setSponcerName(null)
+        }
+    }
+    useEffect(()=>{
+        if(activationCode.userId.length === 7){
+            fetchSponcerName()
+            return
+        } else if(activationCode.userId.length > 1) {
+            setSponcerName(null)
+        } else {
+            setSponcerName("")
+        }
+    },[activationCode.userId])
 
     const copyReferralCode = async (code:string) => {
         try {
@@ -122,6 +142,22 @@ const Activation = () => {
       }
 
     const onSubmit = () => {
+        if(!activationCode.userId || !activationCode.code){
+            toast({
+                title: "Failed!",
+                description:"All fields are required",
+                variant: "destructive",
+            })
+            return
+        }
+        if(!sponcerName){
+            toast({
+                title: "Failed!",
+                description:"Invalid UserId",
+                variant: "destructive",
+            })
+            return
+        }
         setIsLoading(true);
         const activate = async() => {
             try{
@@ -213,6 +249,7 @@ const Activation = () => {
                     </CardHeader>
                     <CardContent className="grid gap-4">
                         <div className="grid gap-3">
+                            <div>
                             <Input
                                 placeholder="User ID"
                                 type="text"
@@ -223,6 +260,8 @@ const Activation = () => {
                                 disabled={isLoading}
                                 className="border-2 h-12 transition-all duration-300 focus:border-purple-500 dark:focus:border-purple-400"
                             />
+                            {sponcerName ? <div className="text-green-500 text-sm">{sponcerName}</div>:sponcerName !== "" && <div className="text-red-500 text-sm">Invalid UserId</div>}
+                      </div>
                             <Input
                                 placeholder="Activation code"
                                 type="text"

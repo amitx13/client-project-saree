@@ -371,7 +371,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useUserState } from '@/recoil/user'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useCheckUserName } from '@/hooks/useCheckUserName'
+import { useCheckUserName, useUserName } from '@/hooks/useCheckUserName'
 
 interface Address {
   houseNo: string;
@@ -410,6 +410,8 @@ export default function Register() {
   const [isChecking, setIsChecking] = useState(false);
   const [isUserNameAvailable, setIsUserNameAvailable] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [sponcerName,setSponcerName] = useState<string|null>("");
+
   const [formData, setFormData] = useState<RegisterFormData>({
     fullName:'',
     userName: '',
@@ -435,6 +437,26 @@ export default function Register() {
       navigate('/')
     }
   }, [])
+
+  const fetchSponcerName = async () => {
+          const res = await useUserName(formData.referralCode);
+          if(res.success){
+              setSponcerName(res.fullname)
+          }
+          else{
+              setSponcerName(null)
+          }
+      }
+      useEffect(()=>{
+          if(formData.referralCode.length === 7){
+              fetchSponcerName()
+              return
+          } else if(formData.referralCode.length > 1) {
+              setSponcerName(null)
+          } else {
+              setSponcerName("")
+          }
+      },[formData.referralCode])
 
   useEffect(() => {
     if (timeoutId) {
@@ -673,6 +695,7 @@ export default function Register() {
                 <div className="grid gap-1">
                   <Label htmlFor="referrerId">Referrer ID</Label>
                   <Input id="referralCode" name="referralCode" placeholder="Referrer ID" type="text" value={formData.referralCode} disabled={isLoading} onChange={handleChange} />
+                  {sponcerName ? <div className="text-green-500 text-sm">{sponcerName}</div>:sponcerName !== "" && <div className="text-red-500 text-sm">Invalid UserId</div>}
                 </div>
                 <div className="grid gap-1">
                   <Label>Address</Label>

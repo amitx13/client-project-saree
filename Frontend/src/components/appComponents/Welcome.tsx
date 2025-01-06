@@ -60,6 +60,10 @@ const WelcomePage = () => {
             navigate("/login")
             return
         }
+        if(user.id !== userId){
+            navigate("/dashboard")
+            return
+        }
         if (userId) {
             setLoading(true)
             fetchUserData(userId)
@@ -131,7 +135,11 @@ const WelcomePage = () => {
                         </h2>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
+                        <div className="space-y-2">
+                            <div>
+                                <p className="text-sm text-gray-500 ">Email:</p>
+                                <p className="font-medium ">{userData.email}</p>
+                            </div>
                             <div className="grid grid-cols-2 gap-x-1 gap-y-2">
                                 <div>
                                     <p className="text-sm text-gray-500">User ID:</p>
@@ -144,10 +152,6 @@ const WelcomePage = () => {
                                 <div>
                                     <p className="text-sm text-gray-500">Full Name:</p>
                                     <p className="font-medium">{userData.fullName}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Email:</p>
-                                    <p className="font-medium">{userData.email}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Mobile:</p>
@@ -170,13 +174,13 @@ const WelcomePage = () => {
                                     <p className="font-medium">{sponcerData?.name || "N/A"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Sponsor email:</p>
-                                    <p className="font-medium">{sponcerData?.email || "N/A"}</p>
-                                </div>
-                                <div>
                                     <p className="text-sm text-gray-500">Sponsor Phone:</p>
                                     <p className="font-medium">{sponcerData?.phone || "N/A"}</p>
                                 </div>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Sponsor email:</p>
+                                <p className="font-medium">{sponcerData?.email || "N/A"}</p>
                             </div>
                         </div>
                     </CardContent>
