@@ -136,7 +136,7 @@ export const transferActivationCode = async (req: Request, res: Response) => {
 
         if (!users || users.length < 2) {
             if(users[0].id === parentUserID){
-                res.status(404).json({ success: false, message: "Your userID is invalid" });
+                res.status(404).json({ success: false, message: "Cannot transfer codes to same user" });
                 return;
             }
             res.status(404).json({ success: false, message: `User with id: ${chileUserId} not found` });

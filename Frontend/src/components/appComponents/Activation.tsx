@@ -60,6 +60,7 @@ const Activation = () => {
     });
 
     const [sponcerName,setSponcerName] = useState<string|null>("");
+    const [transferUserName, setTransferUserName] = useState<string|null>("");
     
     const [transfer, setTransfer] = useState<TransferCode>({
         userId: '',
@@ -95,18 +96,18 @@ const Activation = () => {
         fetchReceivedCode()
     }, [user])
 
-    const fetchSponcerName = async () => {
-        const res = await useUserName(activationCode.userId);
+    const fetchSponcerName = async (userId:string,setState:(arg:string|null)=>void) => {
+        const res = await useUserName(userId);
         if(res.success){
-            setSponcerName(res.fullname)
+            setState(res.fullname)
         }
         else{
-            setSponcerName(null)
+            setState(null)
         }
     }
     useEffect(()=>{
         if(activationCode.userId.length === 7){
-            fetchSponcerName()
+            fetchSponcerName(activationCode.userId,setSponcerName)
             return
         } else if(activationCode.userId.length > 1) {
             setSponcerName(null)
@@ -114,6 +115,17 @@ const Activation = () => {
             setSponcerName("")
         }
     },[activationCode.userId])
+
+    useEffect(()=>{
+        if(transfer.userId.length === 7){
+            fetchSponcerName(transfer.userId,setTransferUserName)
+            return
+        } else if(transfer.userId.length > 1) {
+            setTransferUserName(null)
+        } else {
+            setTransferUserName("")
+        }
+    },[transfer.userId])
 
     const copyReferralCode = async (code:string) => {
         try {
@@ -301,40 +313,46 @@ const Activation = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-lg border bg-card">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
-                                        <TableHead className="font-semibold">Code</TableHead>
-                                        <TableHead className="font-semibold">Status</TableHead>
-                                        <TableHead className="w-[100px] font-semibold">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {currentCodes.map((code) => (
-                                        <TableRow key={code.id} className="hover:bg-gradient-to-r hover:from-blue-500/5 hover:to-cyan-500/5 transition-colors">
-                                            <TableCell className="font-medium">{code.code}</TableCell>
-                                            <TableCell>
-                                                <span className={`px-2 py-1 rounded-full text-sm ${
-                                                    code.isUsed 
-                                                        ? 'bg-gray-500/10 text-red-500 dark:text-red-400'
-                                                        : 'bg-green-500/10 text-green-500 dark:text-green-400' 
-                                                }`}>
-                                                    {code.isUsed ? 'Used' : 'Unused'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => copyReferralCode(code.code)}
-                                                    className="h-8 w-8 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                                                ><CopyIcon className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+                                            <TableHead className="font-semibold">Code</TableHead>
+                                            <TableHead className="font-semibold">Status</TableHead>
+                                            <TableHead className="w-[100px] font-semibold">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    {currentCodes.length !== 0 ?
+                                        <TableBody>
+                                            {currentCodes.map((code) => (
+                                                <TableRow key={code.id} className="hover:bg-gradient-to-r hover:from-blue-500/5 hover:to-cyan-500/5 transition-colors">
+                                                    <TableCell className="font-medium">{code.code}</TableCell>
+                                                    <TableCell>
+                                                        <span className={`px-2 py-1 rounded-full text-sm ${code.isUsed
+                                                                ? 'bg-gray-500/10 text-red-500 dark:text-red-400'
+                                                                : 'bg-green-500/10 text-green-500 dark:text-green-400'
+                                                            }`}>
+                                                            {code.isUsed ? 'Used' : 'Unused'}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => copyReferralCode(code.code)}
+                                                            className="h-8 w-8 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                                        ><CopyIcon className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody> :
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-center text-lg font-semibold">No Activation Codes found</TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    }
+                                </Table>
                         </div>
                         <div className="mt-4">
                             <Pagination>
@@ -395,16 +413,20 @@ const Activation = () => {
                     </CardHeader>
                     <CardContent className="grid gap-4">
                         <div className="grid gap-3">
-                            <Input
-                                placeholder="Recipient User ID"
-                                type="text"
-                                value={transfer.userId}
-                                onChange={(e) => setTransfer((prev)=>{
-                                    return {...prev, userId: e.target.value}
-                                })}
-                                disabled={isTransferLoading}
-                                className="border-2 h-12 transition-all duration-300 focus:border-cyan-500 dark:focus:border-cyan-400"
-                            />
+                                <div>
+
+                                    <Input
+                                        placeholder="Recipient User ID"
+                                        type="text"
+                                        value={transfer.userId}
+                                        onChange={(e) => setTransfer((prev) => {
+                                            return { ...prev, userId: e.target.value }
+                                        })}
+                                        disabled={isTransferLoading}
+                                        className="border-2 h-12 transition-all duration-300 focus:border-cyan-500 dark:focus:border-cyan-400"
+                                    />
+                                    {transferUserName ? <div className="text-green-500 text-sm">{transferUserName}</div>:transferUserName !== "" && <div className="text-red-500 text-sm">Invalid UserId</div>}
+                                </div>
                             <Input
                                 placeholder="Quantity to transfer"
                                 type="number"
