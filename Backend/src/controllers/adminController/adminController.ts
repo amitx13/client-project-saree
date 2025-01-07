@@ -256,6 +256,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
                 referrals: true,
                 address: true,
                 BankDetails:true,
+                transactionDetails:true
             }
         });
         const usersData = users.filter(user => user.role !== "ADMIN");
@@ -278,7 +279,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
                 levelIncome:user.levelIncome,
                 walletBalance: user.walletBalance,
                 address: user.address[0],
-                bankDetails: user.BankDetails[0]
+                bankDetails: user.BankDetails[0],
+                transaction: user.transactionDetails
             }
         })
 

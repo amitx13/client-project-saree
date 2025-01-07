@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Card, CardContent } from "../ui/card"
 import { useUpdateUserData } from "@/hooks/useUpdateUserData"
+import API_BASE_URL from "@/config"
 
 type User = {
   id: string
@@ -60,6 +61,7 @@ export type Users = {
   levelIncome: number
   address: {id:string, houseNo: string, city: string, state: string, pinCode: string }
   bankDetails: {id:string, accountNo: string, ifscCode: string, BankName: string }
+  transaction:{ createdAt: Date; userId: string; image: string; } | null
 }[]
 
 export default function UserManagement() {
@@ -229,6 +231,7 @@ export default function UserManagement() {
                   <TableHead>Status</TableHead>
                   <TableHead>Sponsor</TableHead>
                   <TableHead>Current Balance</TableHead>
+                  <TableHead>Transaction</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -255,6 +258,16 @@ export default function UserManagement() {
                       </TableCell>
                       <TableCell>{user && user?.referrer || "N/A"}</TableCell>
                       <TableCell className="pt-5 flex items-center"><IndianRupee scale={1} size={15} />{user.walletBalance}</TableCell>
+                      <TableCell>{
+                        user.transaction ?
+                       <img
+                        src={`${API_BASE_URL}/${user?.transaction.image}`}
+                        alt={"Transaction"}
+                        className="rounded-md w-12 h-12 object-cover cursor-pointer"
+                        onClick={()=>{
+                          user.transaction && window.open(`${API_BASE_URL}/${user?.transaction.image}`)
+                        }}
+                      />:"N/A"}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           {!user.status ?

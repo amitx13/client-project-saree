@@ -137,7 +137,8 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {user && user?.membershipStatus ? (
-              <Badge className="w-full justify-center py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300">
+              <Badge className="w-full justify-center py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 cursor-pointer"
+               onClick={activateAccount} >
                 <CheckCircle className="mr-2 h-4 w-4" /> Activated
               </Badge>
             ) : (
@@ -145,7 +146,7 @@ export default function Dashboard() {
                 onClick={activateAccount} 
                 className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
               >
-                Activate Account (₹550)
+                Activate Account (₹580)
               </Button>
             )}
           </CardContent>

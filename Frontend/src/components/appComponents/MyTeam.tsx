@@ -199,7 +199,7 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
       <CardHeader>
         <div className="flex items-center space-x-2">
           <Users className="w-5 h-5 text-cyan-500" />
-          <CardTitle className="text-2xl font-bold">First Line Team Members</CardTitle>
+          <CardTitle className="text-2xl font-bold">Direct Members</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
@@ -220,7 +220,7 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
                 <p className={`${member.status?"text-green-500":"text-red-500"}`}>{member.status?"Active":"InActive"}</p>
                 </span>
                 <div className="flex items-center space-x-2">
-                <p className="text-sm font-medium leading-none">ID: {member.userId}</p>
+                <p className="text-sm font-medium leading-none">{member.userId}</p>
                 <p className="text-sm text-muted-foreground flex items-center">
                   <Phone className="h-3 w-3 mr-1 text-cyan-500" />
                   {member.mobile}

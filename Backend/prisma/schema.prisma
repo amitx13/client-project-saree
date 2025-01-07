@@ -32,6 +32,7 @@ model User {
   withdrawalRequests WithdrawalRequest[]
   activationCodes    ActivationCode[]
   referalTree        ReferalTree?
+  transactionDetails TransactionDetails?
 }
 
 model OTP {
@@ -167,4 +168,11 @@ model ReferalTree {
   level4    Json?
   level5    Json?
   level6    Json?
+}
+
+model TransactionDetails {
+  userId    String @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image     String
+  createdAt DateTime @default(now())
 }
