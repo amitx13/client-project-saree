@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
@@ -60,6 +60,39 @@ export const updateReferralLevels = async (referralChain: string[]) => {
     await Promise.all(updates)
     
 };
+
+export const updateReferralTree = async (referralChain: string[], childUserId: string) => {
+    const updates = referralChain.map(async (userId, index) => {
+      const currentTree = await prisma.referalTree.findUnique({
+        where: { userId }
+      });
+  
+      const levelKey = `level${index + 1}` as 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6';
+      
+      const newUser = [childUserId] as Prisma.JsonArray;
+      
+      const existingUsers = currentTree?.[levelKey] as Prisma.JsonArray | null;
+      
+      const updatedUsers = existingUsers 
+        ? [...new Set([...existingUsers, childUserId])] as Prisma.JsonArray
+        : newUser;
+  
+      const updateData = {
+        [levelKey]: updatedUsers
+      };
+  
+      return prisma.referalTree.upsert({
+        where: { userId },
+        create: {
+          userId,
+          ...updateData
+        },
+        update: updateData
+      });
+    });
+  
+    await Promise.all(updates.filter(Boolean));
+  };
 
 export const updateRewardEligibility = async (referralChain: string[]) => { 
     for (const userId of referralChain) {

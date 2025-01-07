@@ -31,6 +31,7 @@ model User {
   userRewards        UserReward[]
   withdrawalRequests WithdrawalRequest[]
   activationCodes    ActivationCode[]
+  referalTree        ReferalTree?
 }
 
 model OTP {
@@ -154,4 +155,16 @@ model LevelReward {
   level6Count  Int      @default(0)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt    DateTime @updatedAt
+}
+
+model ReferalTree {
+  id        String @id @default(cuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level1    Json?
+  level2    Json?
+  level3    Json?
+  level4    Json?
+  level5    Json?
+  level6    Json?
 }

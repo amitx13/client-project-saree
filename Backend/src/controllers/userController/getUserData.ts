@@ -88,7 +88,6 @@ export const getProfileData = async (req:Request, res:Response) => {
         res.status(500).json({  success:false, message: "Something went wrong while getting user data." });
     }
 }
-
 export const getUserTeamData = async (req:Request, res:Response) => {
     const { id } = req.params;
     
@@ -100,7 +99,7 @@ export const getUserTeamData = async (req:Request, res:Response) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id },
-            include:{levelRewards:true}
+            include:{referalTree:true}
         });
 
         if (!user) {
@@ -121,6 +120,53 @@ export const getUserTeamData = async (req:Request, res:Response) => {
             status:referral.membershipStatus
         }));
 
+        interface ReferralUserInfo {
+            level: number;
+            name: string;
+            mobile: string;
+            userId: string;
+            status: boolean;
+          }
+
+        let referalTree:ReferralUserInfo[] = []
+
+        for (let i = 1; i <= 6; i++) {
+            if (!user.referalTree) break;
+            
+            const levelKey = `level${i}` as 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6';
+            const users = user.referalTree[levelKey];
+            
+            if (!Array.isArray(users)) continue;
+            
+            const levelPromises = users.map(async (userId) => {
+              if (typeof userId !== 'string') return null;
+              
+              const referredUser = await prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                  id: true,
+                  fullName: true,
+                  mobile: true,
+                  membershipStatus: true
+                }
+              });
+              
+              if (!referredUser) return null;
+              
+              return {
+                level: i,
+                name: referredUser.fullName,
+                mobile: referredUser.mobile || '',
+                userId: referredUser.id,
+                status: referredUser.membershipStatus
+              };
+            });
+            
+            const levelUsers = await Promise.all(levelPromises);
+            
+            referalTree.push(...levelUsers.filter((user): user is ReferralUserInfo => user !== null));
+          }
+
         if(user.referrerId){
             const sponsored = await prisma.user.findUnique({
             where: { id: user.referrerId },
@@ -133,14 +179,14 @@ export const getUserTeamData = async (req:Request, res:Response) => {
                     phone: sponsored.mobile
                 }
 
-                res.status(200).json({ level: user.levelRewards, sponsored:sponsoredData, referrals: referralsData });
+                res.status(200).json({ referalTree: user.referalTree, referalTreeDetails:referalTree , sponsored:sponsoredData, referrals: referralsData });
             } else {
-                res.status(200).json({  level: user.levelRewards, sponsored:null, referrals:referralsData });
+                res.status(200).json({  referalTree: user.referalTree,referalTreeDetails:referalTree , sponsored:null, referrals:referralsData });
             }
             return;
         
         } else {
-            res.status(200).json({  level: user.levelRewards, sponsored:null, referrals:referralsData });
+            res.status(200).json({  referalTree: user.referalTree,referalTreeDetails:referalTree , sponsored:null, referrals:referralsData });
             return;
         }
     } catch (error) {

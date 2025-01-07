@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CopyIcon, Users, UserPlus, Phone, ChevronLeft, ChevronRight, Network } from 'lucide-react'
+import { CopyIcon, Users, UserPlus, Phone, ChevronLeft, ChevronRight, Network, ChevronRightCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react'
@@ -9,6 +9,9 @@ import { useLogout, useUserState } from "@/recoil/user";
 import { useNavigate } from "react-router-dom";
 import { useUserTeamData } from "@/hooks/useUserTeamData";
 import { Input } from "../ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface UserDataProps {
   sponsored: {
@@ -22,17 +25,23 @@ interface UserDataProps {
     name: string
     mobile: string
   }[]
-  level: {
+  referalTree: {
     id: string;
     userId: string;
-    level1Count: number;
-    level2Count: number;
-    level3Count: number;
-    level4Count: number;
-    level5Count: number;
-    level6Count: number;
-    updatedAt: Date;
-}[]
+    level1: string[]|null;
+    level2: string[]|null;
+    level3: string[]|null;
+    level4: string[]|null;
+    level5: string[]|null;
+    level6: string[]|null;
+  }
+  referalTreeDetails:{
+    level: number;
+    name: string;
+    mobile: string;
+    userId: string;
+    status: boolean;
+  }[]
 }
 
 const MyTeam = () => {
@@ -146,34 +155,7 @@ const MyTeam = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-grow">
-              {userData.level && userData.level[0] ? (
-                <div className="space-y-3">
-                  {[
-                    { level: 'Level 1', count: userData.level[0].level1Count },
-                    { level: 'Level 2', count: userData.level[0].level2Count },
-                    { level: 'Level 3', count: userData.level[0].level3Count },
-                    { level: 'Level 4', count: userData.level[0].level4Count },
-                    { level: 'Level 5', count: userData.level[0].level5Count },
-                    { level: 'Level 6', count: userData.level[0].level6Count },
-                  ].map((item, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 transition-all duration-300 hover:from-blue-500/20 hover:to-cyan-500/20"
-                    >
-                      <p className="text-sm font-medium">{item.level}</p>
-                      <span className="font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-6 rounded-lg bg-gradient-to-r from-gray-500/10 to-gray-500/10">
-                  <p className="text-base font-bold text-gray-500">No Team Data Found</p>
-                </div>
-              )}
-            </CardContent>
+            <LevelDetailsDialog {...userData} />
           </Card>
         )}
     
@@ -237,10 +219,13 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
                 <p className="text-sm font-medium leading-none">{member.name}</p>
                 <p className={`${member.status?"text-green-500":"text-red-500"}`}>{member.status?"Active":"InActive"}</p>
                 </span>
+                <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium leading-none">ID: {member.userId}</p>
                 <p className="text-sm text-muted-foreground flex items-center">
                   <Phone className="h-3 w-3 mr-1 text-cyan-500" />
                   {member.mobile}
                 </p>
+                </div>
               </div>
             </div>
           ))}
@@ -274,3 +259,161 @@ export function FirstLineTeamCard({ teamMembers }: FirstLineTeamCardProps) {
     </>
   )
 }
+
+const LevelDetailsDialog = ( userData:UserDataProps ) => {
+  const USERS_PER_PAGE = 5
+  const [selectedLevel, setSelectedLevel] = useState<number |null>();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const filteredUsers = userData.referalTreeDetails.filter(
+    (user) =>
+      selectedLevel !== null &&
+      selectedLevel !== undefined &&
+      user.level === selectedLevel + 1
+  )
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE)
+
+  // Get current page users
+  const currentUsers = filteredUsers.slice(
+    (currentPage - 1) * USERS_PER_PAGE,
+    currentPage * USERS_PER_PAGE
+  )
+
+  // Reset page when level changes
+  const handleLevelSelect = (index: number) => {
+    setSelectedLevel(index)
+    setCurrentPage(1)
+    setIsOpen(true)
+  }
+
+  return (
+    <div className="mx-4 mb-4">
+      <div className="space-y-3 ">
+        {[
+          { level: 'Level 1', count: userData.referalTree?.level1?.length || 0 },
+          { level: 'Level 2', count: userData.referalTree?.level2?.length || 0 },
+          { level: 'Level 3', count: userData.referalTree?.level3?.length || 0 },
+          { level: 'Level 4', count: userData.referalTree?.level4?.length || 0 },
+          { level: 'Level 5', count: userData.referalTree?.level5?.length || 0 },
+          { level: 'Level 6', count: userData.referalTree?.level6?.length || 0 },
+        ].map((item, index) => (
+          <div
+            key={index}
+            onClick={() => handleLevelSelect(index)}
+            className="flex items-center p-3 justify-between rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 transition-all duration-300 hover:from-blue-500/20 hover:to-cyan-500/20 cursor-pointer"
+          >
+            <div className="justify-between flex items-center w-11/12">
+            <p className="text-sm font-medium">{item.level}</p>
+            <span className="font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+              {item.count}
+            </span>
+            </div>
+            <ChevronRightCircle />
+          </div>
+        ))}
+      </div>
+
+      <Dialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="-translate-y-2">
+            <DialogTitle>
+              Level{" "}
+              {selectedLevel !== null && selectedLevel !== undefined
+                ? selectedLevel + 1
+                : "N/A"}
+            </DialogTitle>
+            <DialogDescription>
+              Level{" "}
+              {selectedLevel !== null && selectedLevel !== undefined
+                ? selectedLevel + 1
+                : "N/A"}{" "}
+              Members
+            </DialogDescription>
+          </DialogHeader>
+          {userData.referalTreeDetails.length !== 0 ?
+          <div className="mt-4 w-full">
+            <div className="w-full overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-200 rounded-md">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">
+                      User ID
+                    </th>
+                    <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">
+                      Name
+                    </th>
+                    <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">
+                      Mobile
+                    </th>
+                    <th className="px-3 py-3 text-left text-sm font-medium text-gray-700">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentUsers.map((user, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-3 py-3 text-sm font-medium">
+                        {user.userId}
+                      </td>
+                      <td className="px-3 py-3 text-sm font-medium">
+                        {user.name}
+                      </td>
+                      <td className="px-3 py-3 text-sm ">{user.mobile}</td>
+                      <td>
+                        <Badge
+                          className={`px-3 py-1 rounded-md ${
+                            user.status
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-red-500 hover:bg-red-600"
+                          }`}
+                        >
+                          {user.status ? "Active" : "Inactive"}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          :
+          <div className="flex items-center justify-center">
+            <p className="text-lg text-gray-500">No members found</p>
+          </div>}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};

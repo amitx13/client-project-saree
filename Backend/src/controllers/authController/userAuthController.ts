@@ -1,12 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto';
 import { sendOTPEmail } from "../../service/mail";
 import rateLimit from 'express-rate-limit';
-import { RateLimitInfo } from 'express-rate-limit';
-import { time } from "console";
+import { referalChain, updateReferralTree } from "../userController/userActivateAccountController";
 
 
 export const JWT_SECRET = process.env.JWT_SECRET || "mlmsupersecret";
@@ -154,6 +152,11 @@ export const registerUser = async (req: Request, res: Response) => {
             },
             include: { address: true, BankDetails: true },
         });
+
+        if(newUser.referrerId){
+            const referralChain = await referalChain(newUser.referrerId);
+            await updateReferralTree(referralChain, newUser.id);
+        }
 
         const token = jwt.sign(
             { userId: newUser.id, email: newUser.email },
