@@ -35,10 +35,13 @@ const FundManagement = () => {
     const navigate = useNavigate()
 
     const [transactionHistory, setTransactionHistory] = useState<TransactionHistoryProps | null>(null)
-
     const fetchTransactionHistory = async () => {
         const res = await useGetAllUsersTransactionDetails(user.id,user.token)
         if(res.success){
+            if(res.users.length === 0){
+                setTransactionHistory(null)
+                return
+            }
             setTransactionHistory(res.users)
         }
     }
