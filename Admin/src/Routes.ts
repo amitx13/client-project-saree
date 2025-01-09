@@ -8,4 +8,5 @@ export const RouteSList = {
     login : '/login',
     registerNewAdmin : '/register-new-admin',
     resetPassword : '/reset-password',
+    fundManagement:'/fund-management',
 }

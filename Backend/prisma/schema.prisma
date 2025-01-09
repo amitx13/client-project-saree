@@ -33,6 +33,7 @@ model User {
   activationCodes    ActivationCode[]
   referalTree        ReferalTree?
   transactionDetails TransactionDetails?
+  requestCodeTransactionDetails RequestCodeTransactionDetails[]
 }
 
 model OTP {
@@ -174,5 +175,16 @@ model TransactionDetails {
   userId    String @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   image     String
+  createdAt DateTime @default(now())
+}
+
+model RequestCodeTransactionDetails {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float
+  transactionId String
+  image     String
+  approved  Boolean  @default(false)
   createdAt DateTime @default(now())
 }

@@ -5,7 +5,7 @@ import {
     AvatarFallback,
 } from "@/components/ui/avatar";
 import { ModeToggle } from "./mode-toggle";
-import { BadgeCheck, LayoutDashboard, LogIn, LogOut, Menu, ShoppingCart, UserCog, Users, Wallet } from 'lucide-react';
+import { ArrowRightLeft, BadgeCheck, LayoutDashboard, LogIn, LogOut, Menu, ShoppingCart, UserCog, Users, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -67,6 +67,7 @@ const navItems = [
     { title: 'Activation', route: RouteSList.activation, icon: <BadgeCheck className="h-5 w-5" /> },
     { title: 'Login', route: RouteSList.login, icon: <LogIn className="h-5 w-5" /> },
     { title: 'Register', route: RouteSList.register, icon: <UserCog className="h-5 w-5" /> },
+    {title: 'Fund Management', route: RouteSList.fundManagement, icon: <ArrowRightLeft className="h-5 w-5" />},
 ];
 
 const Navbar = () => {
@@ -85,7 +86,7 @@ const Navbar = () => {
         if (user) {
             return !['Login', 'Register'].includes(item.title);
         }
-        return !['Dashboard', 'My Team', 'Payouts', 'Activation'].includes(item.title);
+        return !['Dashboard', 'My Team', 'Payouts', 'Activation','Fund Management'].includes(item.title);
     });
 
     return (

@@ -21,7 +21,7 @@ interface ActivationPaymentModalProps {
     setIsOpen: (open: boolean) => void
 }
 
-interface AddProduct {
+export interface AddProduct {
   image: File | null;
 }
 
@@ -204,7 +204,7 @@ export default function ActivationPaymentModal({isOpen, setIsOpen}: ActivationPa
               className="hidden"
             />
           </div> :
-            <Button type="submit" onClick={handleSubmit} className="w-full">
+            <Button type="submit" onClick={handleSubmit} className="w-full" disabled={isLoading}>
               {!isLoading ? 
               <div className="flex items-center w-full justify-center">
                 <CreditCard className="mr-2 h-4 w-4" /> 

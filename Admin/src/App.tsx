@@ -14,6 +14,7 @@ import NotFound from "./components/appComponent/NotFound";
 import Navbar from "./components/appComponent/navbar";
 import useAuthInterceptor from "./hooks/useAuthInterceptor";
 import ProtectedRoute from "./ProtectedRoutes";
+import FundManagement from "./components/appComponent/FundManagement";
 
 export default function App() {
   useAuthInterceptor();
@@ -32,6 +33,7 @@ export default function App() {
         <Route path={RouteSList.registerNewAdmin} element={<ProtectedRoute><Register /></ProtectedRoute>} />
         <Route path={RouteSList.login} element={<Login />} />
         <Route path={RouteSList.resetPassword} element={<ResetPassword />} />
+        <Route path={RouteSList.fundManagement} element={<ProtectedRoute><FundManagement /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

@@ -18,6 +18,7 @@ import Profile from "./components/appComponents/Profile"
 import Homepage from "./components/appComponents/Homepage"
 import BackgroundLogo from "./components/appComponents/BackgroundLogo"
 import WelcomePage from "./components/appComponents/Welcome"
+import FundManagement from "./components/appComponents/FundManagement"
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path={RouteSList.resetPassword} element={<ResetPassword/>}/>
         <Route path={RouteSList.Profile} element={<Profile/>} />
         <Route path={RouteSList.welcome} element={<WelcomePage/>} />
+        <Route path={RouteSList.fundManagement} element={<FundManagement />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </BackgroundLogo>

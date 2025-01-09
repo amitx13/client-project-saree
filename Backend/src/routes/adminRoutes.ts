@@ -2,6 +2,7 @@ import express from 'express';
 import multer from "multer";
 import { activateUserAccount, addProduct, createMultipleActivationCodes, createMultipleActivationCodesAndTransfer, createRewards, deleteProduct, dispatchOrder, getAllCodes, getAllOrdersDetails, getAllProducts, getAllUsers, getAllWithdrawalRequests, getDashboardData, updateProductStock, updateUserData } from '../controllers/adminController/adminController';
 import { completeWithdrawalRequest, rejectWithdrawalRequest } from '../controllers/adminController/adminController';
+import { getAllUsersTransactionDetails, updateRequestCodeTransactionDetails } from '../controllers/adminController/getTransactionDetails';
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.get('/getAllWithdrawalRequests',getAllWithdrawalRequests)
 router.get('/fetchAllProducts',getAllProducts)
 router.get('/fetchDashboardData',getDashboardData)
 router.get('/getAllAdminCodes',getAllCodes)
+router.get('/getAllUsersTransactionDetails',getAllUsersTransactionDetails)
 //Post routes
 
 router.post('/addproduct', upload.single("image"), addProduct)
@@ -29,6 +31,7 @@ router.put('/updateProductStock',updateProductStock)
 router.put('/dispatchproduct', dispatchOrder)
 router.put('/rejectWithdrawalRequest', rejectWithdrawalRequest)
 router.put('/completeWithdrawalRequest', completeWithdrawalRequest)
+router.put('/updateRequestCodeTransactionDetails', updateRequestCodeTransactionDetails)
 
 //Delete routes
 

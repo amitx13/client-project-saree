@@ -55,7 +55,6 @@ export default function OrderManagement() {
 
   const fetchAllUserOrdersDetails = async () => {
     const res = await useUserOrdersDetails(user.token)
-    console.log("res",res)
     if(res && res.success){
       setOrders(res.ordersData)
     }

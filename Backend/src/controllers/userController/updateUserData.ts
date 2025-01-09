@@ -58,7 +58,6 @@ export const updateUserData = async (req:Request, res:Response) => {
 
 export const addTransactionDetails = async (req:Request, res:Response) => {
     const { userId } = req.body;
-    console.log(req.body);
     if(!userId){
         res.status(400).json({ success:false, message: "Invalid User." });
         return
@@ -112,5 +111,56 @@ export const getUserTransactionData = async (req:Request, res:Response) => {
     } catch (error) {
         console.error("Error getting user transaction data:", error);
         res.status(500).json({ success:false, message: "Something went wrong while getting user transaction data." });
+    }
+}
+
+export const addfundRequest = async (req:Request, res:Response) => {
+    const {userId, amount, transactionId} = req.body;
+
+    if(!userId || !amount || !transactionId){
+        res.status(400).json({ success:false, message: "Invalid User or Amount or TransactionId." });
+        return
+    }
+    if(!req.file){
+        res.status(400).json({ success:false, message: "No Image found." });
+        return
+    }
+    try{
+        const amt = parseFloat(amount);
+        const imagepath = path.join("public", "uploads", `${Date.now()}-${req.file.originalname}`);
+        await sharp(req.file.path).toFile(imagepath);
+        fs.unlinkSync(req.file.path);
+
+        await prisma.requestCodeTransactionDetails.create({
+            data: {
+                userId,
+                amount:amt,
+                transactionId,
+                image: imagepath,
+            }
+        });
+        res.status(200).json({ success:true, message: "Fund Request added successfully." });
+
+    } catch(error) {
+        console.error("Error adding fund request:", error);
+        res.status(500).json({ success:false, message: "Something went wrong while adding fund request." });
+    }
+}
+
+export const getUsersTransactionDetails = async (req:Request, res:Response) => {
+    const { id } = req.params;
+
+    if(!id){
+        res.status(400).json({ success:false, message: "Invalid User." });
+        return
+    }
+    try {
+        const users = await prisma.requestCodeTransactionDetails.findMany({
+            where: { userId: id }
+        })
+        res.status(200).json({success:true, users})
+    }
+    catch (e:any) {
+        res.status(500).json({ success: false, message: e.message })
     }
 }

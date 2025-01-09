@@ -4,7 +4,7 @@ import { createWithdrawalRequest } from '../controllers/userController/userWithd
 import { activateAccountWithCode } from '../controllers/userController/userActivateAccountController';
 import { getProfileData, getUserData, getUserRewardData, getUserTeamData, getUserWalletData, getuserWelcomedata } from '../controllers/userController/getUserData';
 import { claimReward } from '../controllers/userController/userRewardController';
-import { addTransactionDetails, getUserTransactionData, updateUserData } from '../controllers/userController/updateUserData';
+import { addfundRequest, addTransactionDetails, getUsersTransactionDetails, getUserTransactionData, updateUserData } from '../controllers/userController/updateUserData';
 import multer from "multer";
 
 const router = express.Router();
@@ -19,6 +19,7 @@ router.get('/userOrderStatus/:id',getUserOrderStatus);
 router.get('/getAllReceivedCode/:id',getAllReceivedCodes);
 router.get('/getuserWelcomedata/:id',getuserWelcomedata)
 router.get('/transactionData/:id',getUserTransactionData);
+router.get('/getUsersTransactionDetails/:id',getUsersTransactionDetails);
 
 router.post('/order',createOrder);
 router.post('/withdraw',createWithdrawalRequest);
@@ -28,4 +29,5 @@ router.post('/TransferActivationCode', transferActivationCode)
 router.post('/updateUserData',updateUserData);
 router.post('/transferActivationCode', transferActivationCode)
 router.post('/transactionDetails', upload.single("image"), addTransactionDetails);
+router.post('/fundRequest', upload.single("image"), addfundRequest);
 export default router;

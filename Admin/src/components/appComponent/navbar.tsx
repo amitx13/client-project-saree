@@ -4,7 +4,7 @@ import {
     Avatar,
     AvatarFallback,
 } from "@/components/ui/avatar";
-import { BadgeCheck, LayoutDashboard, LogIn, LogOut, Menu, Package, ShoppingCart, UserCog, Users, Wallet } from 'lucide-react';
+import { ArrowRightLeft, BadgeCheck, LayoutDashboard, LogIn, LogOut, Menu, Package, ShoppingCart, UserCog, Users, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -27,6 +27,8 @@ const navItems = [
     { title: 'Activation', route: RouteSList.activation, icon: <BadgeCheck /> },
     { title: 'Login', route: RouteSList.login, icon: <LogIn /> },
     { title: 'Register', route: RouteSList.registerNewAdmin, icon: <UserCog /> },
+    {title: 'Fund Management', route: RouteSList.fundManagement, icon: <ArrowRightLeft className="h-5 w-5" />},
+
 ];
 
 const Navbar = () => {

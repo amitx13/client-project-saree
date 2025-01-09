@@ -74,8 +74,6 @@ const MyTeam = () => {
     }
   }, [user])
 
-  console.log("userData:",userData)
-
   const copyReferralCode = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content)
